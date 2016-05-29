@@ -86,14 +86,40 @@ void CheckFlightMode() {
     if(iob_mode == 10 ){flMode = AUTO;baseState=2;} // AUTO
     if(iob_mode == 1) {flMode = CIRC;baseState=3;}   // CIRCLE
   }
-}
+#ifdef JD_IO
+#ifndef NEWPAT  
+  patt = flMode + 1;
+#else 
+  DPL(mbind01_ADDR + flMode);
+  while(flMode != readEEPROM(mbind01_ADDR + (loopPos))) {
+   DPL(flMode);
+   loopPos = loopPos + 2;
+  }    
+  DPL(loopPos);
 
+  pattByteA = readEEPROM(pat01_ADDR + loopPos);
+  pattByteB = readEEPROM(pat01_ADDR + (loopPos + 1));
+  DPL(pattByteA, BIN);
+  DPL(pattByteB, BIN); 
+
+/*
+  tempvar = readEEPROM(mbind01_ADDR  + (flMode * 2) + 1);
+  tempvar--; // - 1 to match correct pattern. As banks starts from 0 and modes from 1.
+  pattByteA = readEEPROM(pat01_ADDR + (tempvar * 2));
+  pattByteB = readEEPROM(pat01_ADDR + (tempvar * 2) + 1);
+  
+*/
+//  DPL(pattByteA, BIN);
+//  DPL(pattByteB, BIN);
+#endif
+#endif
+}
+  
 // Checking if BIT is active in PARAM, return true if it is, false if not
 byte isBit(byte param, byte bitfield) {
  if((param & bitfield) == bitfield) return 1;
   else return 0;  
 }
-
 
 #ifdef JD_IO
 // Roll all outputs one time one by one and have delay XX ms between status changes
@@ -123,33 +149,6 @@ void AllOff() {
   }  
 }
 
-
-#ifndef NEWPAT  
-  patt = flMode + 1;
-#else 
-  DPL(mbind01_ADDR + flMode);
-  while(flMode != readEEPROM(mbind01_ADDR + (loopPos))) {
-   DPL(flMode);
-   loopPos = loopPos + 2;
-  }    
-  DPL(loopPos);
-
-  pattByteA = readEEPROM(pat01_ADDR + loopPos);
-  pattByteB = readEEPROM(pat01_ADDR + (loopPos + 1));
-  DPL(pattByteA, BIN);
-  DPL(pattByteB, BIN); 
-
-/*
-  tempvar = readEEPROM(mbind01_ADDR  + (flMode * 2) + 1);
-  tempvar--; // - 1 to match correct pattern. As banks starts from 0 and modes from 1.
-  pattByteA = readEEPROM(pat01_ADDR + (tempvar * 2));
-  pattByteB = readEEPROM(pat01_ADDR + (tempvar * 2) + 1);
-  
-*/
-//  DPL(pattByteA, BIN);
-//  DPL(pattByteB, BIN);
-#endif  
-}
 
 // Update main pattern
 void RunPattern() {
@@ -267,8 +266,8 @@ boolean getLBit(byte Reg, byte whichBit) {
      break;
   }
 }
-
-
+#endif
+#ifdef FRSKY
 void Batt_Alarm_LED(void)
 {
      //-------Operat Battery Display Alarm LED------//
@@ -318,3 +317,5 @@ void Batt_Alarm_LED(void)
    }
 }
 #endif
+
+

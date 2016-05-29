@@ -89,6 +89,7 @@ void doCommand() {
       "version   \tMavPixel firmware version.\r\n" \
       "led       \tConfigure LEDs.\r\n" \
       "baud      \tSet serial baud rate.\r\n" \
+      "free      \tFree RAM.\r\n" \
       "help      \tThis list.\r\n"
       "quit      \tExit CLI mode."));
 }

@@ -161,9 +161,6 @@ byte RIGHT;     // Pointer to Out[] array for RIGHT Output LED
 byte FRONT;     // Pointer to Out[] array for FRONT Output LED
 byte REAR;      // Pointer to Out[] array for REAR Output LED
 
-byte BattAlarmPercentage;  // Percentage value to calculate LOW Voltage Alarm
-
-byte isFrSky;  // FrSky telemetry on/off flag
 
 // Left/Right static patterns
 static byte le_patt[8][16] = {
@@ -191,6 +188,8 @@ static byte ri_patt[8][16] = {
 
 
 // FrSky modules addon
+byte isFrSky;  // FrSky telemetry on/off flag
+byte BattAlarmPercentage;  // Percentage value to calculate LOW Voltage Alarm
 static long f_curMillis;
 static long f_preMillis;
 static int f_delMillis = 200;

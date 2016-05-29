@@ -147,7 +147,7 @@ void read_mavlink(){
                 if(isArmedOld == 0) {
                     CheckFlightMode();
                     isArmedOld = 1;
-#ifdef JD_IO                    
+#ifdef FRSKY                    
                     Alti_SR.En_Alt=1;  //Wait!! Arm==1
                     Batt_SR.Plugin_Frist=0; //Clear for backupdata data
 #endif

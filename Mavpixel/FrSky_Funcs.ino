@@ -456,7 +456,7 @@ byte addEnd() {
 // Frame format:
 //
 
-#ifdef FRSER
+#ifdef FRSKY
 byte sendPayload(byte len) {
   
   frSerial.write(0x5E);

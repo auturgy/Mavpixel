@@ -119,7 +119,7 @@
 #define HEARTBEAT     // HeartBeat signal
 //#define JD_IO
 //#define SERDB         // Output debug information to SoftwareSerial 
-//#define FRSER          // FrSky serial output, cannot be run same time with SERDB
+#define FRSKY          // FrSky serial output, cannot be run same time with SERDB
 //#define ONOFFSW       // Do we have OnOff switch connected in pins 
 //#define membug
 //#define HWSWITCH    // Hardware factory reset option
@@ -298,7 +298,7 @@ Adafruit_NeoPixel strip;
 #endif
 
 
-#ifdef FRSER
+#ifdef FRSKY
 SoftwareSerial frSerial(6,5,true);     // Initializing FrSky Serial on pins 5,6 and Inverted Serial
 #endif
 
@@ -361,7 +361,7 @@ debug = 4;
     Out[6] = 2;
   }    
 #endif  
-#ifdef FRSER
+#ifdef FRSKY
   frSerial.begin(9600);
 #endif
 
@@ -440,6 +440,11 @@ debug = 4;
   // setup mavlink port
   mavlink_comm_0_port = &Serial;
 
+#ifdef FRSKY
+  // FrSky Bridge active or not
+  isFrSky = readEEPROM(ISFRSKY);
+#endif
+
 #ifdef JD_IO    
   // Rear most important values from EEPROM to their variables  
   LEFT = readEEPROM(LEFT_IO_ADDR);    // LEFT output location in Out[] array
@@ -451,9 +456,6 @@ debug = 4;
   // Percentage value to calculate Low Battery Alarm  
   BattAlarmPercentage = readEEPROM(BatteryAlarm_Percentage_ADDR);  
   
-  // FrSky Bridge active or not
-  isFrSky = readEEPROM(ISFRSKY);
-
   // Initializing output pins
   for(int looper = 0; looper <= 5; looper++) {
     pinMode(Out[looper],OUTPUT);
@@ -498,7 +500,7 @@ debug = 4;
   isActive = EN;  
   DPL("End of setup");
   
-#ifdef JD_IO  
+#ifdef FRSKY
   //--------Initail Para Battery Systems----------//
   Batt_SR.Plugin_Frist=FALSE;  //start plugin vcc--> board  
   Batt_Cell_Detect=0;
@@ -596,8 +598,6 @@ void loop()
 #endif
 #ifdef FRSKY   
     if(isFrSky) update_FrSky();   // if isFrSky = TRUE, Construct FrSky Telemetry packet and send out
-#endif
-#ifdef JD_IO
     //-----Operat Altiude uadate iob_alt
    if( Alti_SR.En_Alt!=1)   //Wait!! Arm==1
    {
