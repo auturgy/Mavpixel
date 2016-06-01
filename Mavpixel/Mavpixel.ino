@@ -119,15 +119,17 @@
 #define HEARTBEAT     // HeartBeat signal
 //#define JD_IO
 //#define SERDB         // Output debug information to SoftwareSerial 
-#define FRSKY          // FrSky serial output, cannot be run same time with SERDB
+//#define FRSKY          // FrSky serial output, cannot be run same time with SERDB
 //#define ONOFFSW       // Do we have OnOff switch connected in pins 
 //#define membug
 //#define HWSWITCH    // Hardware factory reset option
+#define LED_STRIP
+#define USE_LED_ANIMATION
 
 /* **********************************************/
 /* ***************** INCLUDES *******************/
 
-#define membug   // undefine for real firmware
+//#define membug   // undefine for real firmware
 //#define FORCEINIT  // You should never use this unless you know what you are doing 
 
 #define hiWord(w) ((w) >> 8)
@@ -152,31 +154,33 @@
 #include <SimpleTimer.h>
 #include <GCS_MAVLink.h>
 
-
+/*
 #ifdef membug
 #include <MemoryFree.h>
 #endif
+*/
 
 #include <SoftwareSerial.h>
-#include <Adafruit_NeoPixel.h>
+
+//#include <Adafruit_NeoPixel.h>
+#include <FastLED.h>
 
 // Configurations
 #include "IOBoard.h"
-#include "IOEEPROM.h"
-#include "ledstrip.h"
 #include "color.h"
+#include "ledstrip.h"
+#include "IOEEPROM.h"
 
 //#define DUMPEEPROM            // Should not be activated in repository code, only for debug
 //#define DUMPEEPROMTELEMETRY   // Should not be activated in repository code, only for debug
 #define NEWPAT
 //#define HWRESET
-#define LED_STRIP
 
 /* *************************************************/
 /* ***************** DEFINITIONS *******************/
 
 #define VER "2.0"   // Software version
-#define CHKVER 43    // Version number to check from EEPROM
+#define CHKVER 40    // Version number to check from EEPROM
 
 // These are not in real use, just for reference
 //#define O1 8      // High power Output 1
@@ -188,7 +192,7 @@
 
 #define Circle_Dly 1000
 
-//#define ledPin 13     // Heartbeat LED if any
+#define ledPin 13     // Heartbeat LED if any
 #define LOOPTIME  50  // Main loop time for heartbeat
 //#define BAUD 57600    // Serial speed
 
@@ -196,14 +200,14 @@
 
 
 /* Patterns and other variables */
-static byte LeRiPatt = NOMAVLINK; // default pattern is full ON
+//static byte LeRiPatt = NOMAVLINK; // default pattern is full ON
+//static int curPwm;
+//static int prePwm;
+
 
 static long p_preMillis;
 static long p_curMillis;
 static int p_delMillis = LOOPTIME;
-
-static int curPwm;
-static int prePwm;
 
 int messageCounter;
 static bool mavlink_active;
@@ -282,10 +286,10 @@ byte ledState;
 byte baseState;  // Bit mask for different basic output LEDs like so called Left/Right 
 
 //byte debug = 1;  // Shoud not be activated on repository code, only for debug
-byte deb2 = 1;
+//byte deb2 = 1;
 
-byte ANA;
-byte bVER = 10;
+//byte ANA;
+//byte bVER = 10;
 
 // Objects and Serial definitions
 FastSerialPort0(Serial);
@@ -293,8 +297,13 @@ FastSerialPort0(Serial);
 SimpleTimer  mavlinkTimer;
 
 #ifdef LED_STRIP
-#define NEO_PIN 7
-Adafruit_NeoPixel strip;
+
+#define NEO_PIN1 14
+#define NEO_PIN2 15
+#define NEO_PIN3 16
+#define NEO_PIN4 17
+CRGB ledrgb[32];
+hsvColor_t ledhsv[32]; 
 #endif
 
 
@@ -312,9 +321,48 @@ byte debug = 1;
 #define DPN if(debug) {}
 byte debug = 0;
 #endif
+/*
+// Input a value 0 to 255 to get a color value.
+// The colours are a transition r - g - b - back to r.
+uint32_t Wheel(byte WheelPos) {
+  WheelPos = 255 - WheelPos;
+  if(WheelPos < 85) {
+    return strip.Color(255 - WheelPos * 3, 0, WheelPos * 3);
+  }
+  if(WheelPos < 170) {
+    WheelPos -= 85;
+    return strip.Color(0, WheelPos * 3, 255 - WheelPos * 3);
+  }
+  WheelPos -= 170;
+  return strip.Color(WheelPos * 3, 255 - WheelPos * 3, 0);
+}
 
+void rainbow(uint8_t wait) {
+  uint16_t i, j;
 
+  for(j=0; j<256; j++) {
+    for(i=0; i<strip.numPixels(); i++) {
+      strip.setPixelColor(i, Wheel((i+j) & 255));
+    }
+    strip.show();
+    delay(wait);
+  }
+}
 
+// Slightly different, this makes the rainbow equally distributed throughout
+void rainbowCycle(uint8_t wait) {
+  uint16_t i, j;
+
+  for(j=0; j<256*5; j++) { // 5 cycles of all colors on wheel
+    for(i=0; i< strip.numPixels(); i++) {
+      strip.setPixelColor(i, Wheel(((i * 32) + j) & 255));
+    }
+    strip.show();
+    delay(wait);
+  }
+}
+
+*/
 
 /* **********************************************/
 /* ***************** SETUP() *******************/
@@ -324,10 +372,12 @@ void setup()
   
   // Before all, set debug level if we have any. Comment out if not
 debug = 4;  
-
+#ifdef LED_STRIP
   ledStripInit();
   ledStripEnable();
-
+  setBrightness(32);
+  //while(1) rainbowCycle(5);
+#endif
   
   // Initialize Serial port, speed
   Serial.begin(TELEMETRY_SPEED);
@@ -389,7 +439,7 @@ debug = 4;
     writeFactorySettings();
     DPL(F(" done."));
   }
- 
+/* 
   if(readEEPROM(FACTORY_RESET)) {
 #ifdef DUMPEEPROMTELEMETRY
     Serial.print(F("Factory reset flag: "));
@@ -400,7 +450,7 @@ debug = 4;
     writeFactorySettings();
     DPL(F(" done."));
   }
-    
+*/    
  
 #ifdef DUMPEEPROM
   // For debug needs, should never be activated on real-life
@@ -443,6 +493,8 @@ debug = 4;
 #ifdef FRSKY
   // FrSky Bridge active or not
   isFrSky = readEEPROM(ISFRSKY);
+  // Percentage value to calculate Low Battery Alarm  
+  BattAlarmPercentage = readEEPROM(BatteryAlarm_Percentage_ADDR);    
 #endif
 
 #ifdef JD_IO    
@@ -452,9 +504,6 @@ debug = 4;
   FRONT = readEEPROM(FRONT_IO_ADDR);  // FRONT output location in Out[] array
   REAR = readEEPROM(REAR_IO_ADDR);    // REAR output location in Out[] array
   ledPin = readEEPROM(LEDPIN_IO_ADDR);
-  
-  // Percentage value to calculate Low Battery Alarm  
-  BattAlarmPercentage = readEEPROM(BatteryAlarm_Percentage_ADDR);  
   
   // Initializing output pins
   for(int looper = 0; looper <= 5; looper++) {
@@ -477,12 +526,28 @@ debug = 4;
   // Activate Left/Right lights
   updateBase();
 #endif
+
+#ifdef LED_STRIP
+  // Read led strip configs from EEPROM
+  lowBattPct = readEEPROM(LOWBATT_PCT);
+  lowBattVolt = readEEPROM(LOWBATT_VOLT) / 1000.0f;
+  readStruct(LED_CONFIGS, (uint8_t*)ledConfigs, sizeof(ledConfigs));  
+  readStruct(COLOR_CONFIGS, (uint8_t*)colors, sizeof(colors));
+  readStruct(MODE_CONFIGS, (uint8_t*)modeColors, sizeof(modeColors));
+#endif
+
+
+  Serial.println(F("Mavpixel " VER " initialised."));
+
+
   // Jani's debug stuff  
 #ifdef membug
-  Serial.print(F("Freemem: "));
-  Serial.println(freeMem());
-  DPL(freeMem());
+  DPN(freeMem());
+  DPL(F(" bytes free RAM."));
 #endif
+
+  Serial.println(F("Press <Enter> 3 times for CLI."));
+  
 
   // Startup MAVLink timers, 50ms runs
   // this affects pattern speeds too.
@@ -493,12 +558,12 @@ debug = 4;
   
   // Enable MAV rate request, yes always enable it for in case.   
   // if MAVLink flows correctly, this flag will be changed to DIS
-  enable_mav_request = EN;  
+  enable_mav_request = DI;  
   
   // for now we are always active, maybe in future there will be some
   // additional features like light conditions that changes it.
   isActive = EN;  
-  DPL("End of setup");
+  //DPL("End of setup");
   
 #ifdef FRSKY
   //--------Initail Para Battery Systems----------//
@@ -583,12 +648,12 @@ void loop()
     }  
     
     // Request rates again on every 10th check if mavlink is still dead.
-    if(!mavlink_active && !cli_active && messageCounter == 10) {
+    if(!mavlink_active && !cli_active && messageCounter >= 10) {
     //if(!cli_active && !mavlink_active) {
       DPL(F("Enabling requests again"));
       enable_mav_request = 1;
       messageCounter = 0;
-      LeRiPatt = 6;
+      //LeRiPatt = 6;
     } 
 
     read_mavlink();
@@ -634,7 +699,7 @@ void OnMavlinkTimer()
 
     // Checks that we handle only if MAVLink is active
     if(mavlink_active) {
-      if(iob_fix_type <= 2) LeRiPatt = ALLOK;
+/*      if(iob_fix_type <= 2) LeRiPatt = ALLOK;
 //      if(iob_fix_type <= 2) LeRiPatt = NOLOCK;
       if(iob_fix_type >= 3) LeRiPatt = ALLOK;
   
@@ -642,24 +707,30 @@ void OnMavlinkTimer()
       if(voltAlarm) {
         LeRiPatt = LOWVOLTAGE;  
 //        DPL("ALARM, low voltage");
-      }     
+      }*/     
     }
         
     // If we are armed, run patterns on read output
 #ifdef JD_IO
     if(isArmed) RunPattern();
      else ClearPattern(); 
-#endif    
     // Update base LEDs  
     //updateBase();
 
-    DPN(F("MC:")); 
-    DPL(messageCounter);
+    //DPN(F("MC:")); 
+    //DPL(messageCounter);
+#endif    
+
+#ifdef LED_STRIP
+    updateLedStrip();
+#endif
+
+
     if(messageCounter >= 20 && mavlink_active) {
       DPL(F("We lost MAVLink"));
       mavlink_active = 0;
       messageCounter = 0;
-      LeRiPatt = NOMAVLINK;
+      //LeRiPatt = NOMAVLINK;
     }
   //  DPL(messageCounter);
  
@@ -671,41 +742,40 @@ void OnMavlinkTimer()
   }
 }
 
-
+#ifdef JD_IO
 void dumpVars() {
-#ifdef SERDB  
  DPN(F("Sats:"));
- DPN(iob_satellites_visible);
- DPN(F(" Fix:"));
- DPN(iob_fix_type);
- DPN(F(" Modes:"));
- DPN(iob_mode);
- DPN(F(" Armed:"));
- DPN(isArmed);
- DPN(F(" Thr:"));
- DPN(iob_throttle);
- DPN(F(" CPUVolt:"));
- DPN(boardVoltage);
- DPN(F(" BatVolt:"));
- DPN(iob_vbat_A);
- DPN(F(" Alt:"));
- DPN(iob_alt);
- DPN(F(" Hdg:"));
- DPN(iob_heading);
- DPN(F(" Spd:"));
- DPN(iob_groundspeed);
- DPN(F(" Lat:"));
- DPN(iob_lat);
- DPN(F(" Lon"));
- DPN(iob_lon);
-// DPN(" Pitch");
-// DPN(iob_pitch);
-// DPN(" Yaw");
-// DPN(iob_yaw);
-// DPN(" Roll");
-// DPN(iob_roll);
- DPN(F(" Hdop"));
- DPN(iob_hdop);
+ DPL(iob_satellites_visible);
+ DPN(F("Fix:"));
+ DPL(iob_fix_type);
+ DPN(F("Modes:"));
+ DPL(iob_mode);
+ DPN(F("Armed:"));
+ DPL(isArmed);
+ DPN(F("Thr:"));
+ DPL(iob_throttle);
+ DPN(F("CPUVolt:"));
+ DPL(boardVoltage);
+ DPN(F("BatVolt:"));
+ DPL(iob_vbat_A);
+ DPN(F("Alt:"));
+ DPL(iob_alt);
+ DPN(F("Hdg:"));
+ DPL(iob_heading);
+ DPN(F("Spd:"));
+ DPL(iob_groundspeed);
+ DPN(F("Lat:"));
+ DPL(iob_lat);
+ DPN(F("Lon:"));
+ DPL(iob_lon);
+// DPN("Pitch:");
+// DPL(iob_pitch);
+// DPN("Yaw:");
+// DPL(iob_yaw);
+// DPN("Roll:");
+// DPL(iob_roll);
+ DPN(F("Hdop:"));
+ DPL(iob_hdop);
 
 
  
@@ -721,6 +791,5 @@ void dumpVars() {
         // DPN("Cell:");
          //DPN(Batt_Volte_Backup);
  
- DPL(F(" ")); 
-#endif
 }
+#endif

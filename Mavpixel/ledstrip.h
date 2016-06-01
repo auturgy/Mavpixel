@@ -73,6 +73,15 @@ typedef enum {
     LED_FUNCTION_COLOR \
 )
 
+typedef enum {
+    MCI_MODE = 0,
+    MCI_COLOR,
+    MCI_INDEX
+} mci_e;
+
+#define MCI_COMPONENT_COUNT (MCI_INDEX + 1)
+
+
 typedef struct modeColorIndexes_s {
     uint8_t north;
     uint8_t east;
@@ -80,7 +89,11 @@ typedef struct modeColorIndexes_s {
     uint8_t west;
     uint8_t up;
     uint8_t down;
+    uint8_t operator[](uint8_t i) const {return *((&north) + i);}
+    uint8_t &operator[](uint8_t i) {return *((&north) + i);}
 } modeColorIndexes_t;
+
+#define MODE_COLOR_INDEX_MAX 5
 
 typedef enum {
     QUADRANT_NORTH_EAST = 1,
@@ -97,6 +110,9 @@ typedef struct ledConfig_s {
 
 extern uint8_t ledCount;
 extern uint8_t ledsInRingCount;
+extern ledConfig_t ledConfigs[MAX_LED_STRIP_LENGTH];
+extern hsvColor_t* colors[CONFIGURABLE_COLOR_COUNT];
+extern modeColorIndexes_t modeColors[MAX_MODES + 1];
 
 //PG_DECLARE_ARR(ledConfig_t, MAX_LED_STRIP_LENGTH, ledConfigs);
 //PG_DECLARE_ARR(hsvColor_t, CONFIGURABLE_COLOR_COUNT, colors);

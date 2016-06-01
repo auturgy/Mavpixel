@@ -109,13 +109,18 @@
 //New vars introduced with mavpixel
 #define STRIP_IO_ADDR 134
 #define MAVLINK_BAUD  135   //16 bit
-
+#define LOWBATT_PCT   137
+#define LOWBATT_VOLT  138    //16 bit
 
 // Internal version, check placeholders
 #define CHK1 252
 #define CHK2 253
 #define VERS 254
 #define SWVER 255
+
+#define LED_CONFIGS 256  //128 bytes
+#define COLOR_CONFIGS 384 //32 bytes
+#define MODE_CONFIGS 416 //126 bytes
 
 #define EEPROM_MAX_ADDR 1023 // This is maximum for atmel 328 chip
 

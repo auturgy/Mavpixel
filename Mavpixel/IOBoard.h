@@ -36,16 +36,26 @@
 #define ACRO 1
 #define ALTH 2
 #define AUTO 3
-#define LOIT 4
-#define GUID 5
+#define GUID 4
+#define LOIT 5
 #define RETL 6
 #define CIRC 7
-#define POSI 8
-#define LAND 9
-#define OFLO 10
-#define MANU 11
-#define FBWA 12
-#define FBWB 13
+#define LAND 8
+#define DRFT 9
+#define SPRT 10
+#define FLIP 11
+#define ATUN 12
+#define POSH 13
+#define BRAK 14
+#define THRO 15
+
+#define MANU 16
+#define FBWA 17
+#define FBWB 18
+#define TRAN 19
+#define CRUS 20
+
+#define MAX_MODES 20
 
 // MAVLink HeartBeat bits
 #define MOTORS_ARMED 128
@@ -98,10 +108,6 @@ static uint16_t iob_mode = 0;                   // Navigation mode from RC AC2 =
 static uint8_t  iob_nav_mode = 0;               // Navigation mode from RC AC2 = CH5, APM = CH8
 static uint16_t iob_old_mode = 0;
 
-static int cell_numb = 3;
-static int cell_count = 0;
-static int cellV[MAXCELL]; // Volts for each cell
-
 static float    iob_lat = 0;                    // latidude
 static float    iob_lon = 0;                    // longitude
 static uint8_t  iob_satellites_visible = 0;     // number of satelites
@@ -115,6 +121,11 @@ static uint8_t  iob_got_home = 0;               // tels if got home position or 
 static int8_t      iob_pitch = 0;                  // pitch form DCM
 static int8_t      iob_roll = 0;                   // roll form DCM
 static int8_t      iob_yaw = 0;                    // relative heading form DCM
+
+static uint16_t   iob_chan1 = 1500;
+static uint16_t   iob_chan2 = 1500;
+static uint16_t   iob_chan3 = 1500;
+static uint16_t   iob_chan4 = 1500;
 
 static float    iob_heading = 0;                // ground course heading from GPS
 static float    iob_alt = 0;                    // altitude
@@ -152,7 +163,14 @@ byte flMode;          // Our current flight mode as defined
 byte isArmed = 0;     // Is motors armed flag
 byte isArmedOld = 0;  // Earlier Armed status flag
 byte isActive;        // Is MAVLink active flag
-byte ledPin;    // Heartbeat LED place holder if any
+//byte ledPin;    // Heartbeat LED place holder if any
+
+#ifdef LED_STRIP
+uint8_t lowBattPct;
+float lowBattVolt;
+uint8_t numCells = 0;
+float cellVoltage = 0;
+#endif
 
 #ifdef JD_IO
 // OUTPUT LED dynamic place holders
@@ -186,9 +204,14 @@ static byte ri_patt[8][16] = {
 #endif
 
 
-
+#ifdef FRSKY
 // FrSky modules addon
 byte isFrSky;  // FrSky telemetry on/off flag
+
+static int cell_numb = 3;
+static int cell_count = 0;
+static int cellV[MAXCELL]; // Volts for each cell
+
 byte BattAlarmPercentage;  // Percentage value to calculate LOW Voltage Alarm
 static long f_curMillis;
 static long f_preMillis;
@@ -207,3 +230,6 @@ byte minutes;
 byte second;
 
 // FrSky module addon - END
+#endif
+
+

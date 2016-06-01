@@ -123,7 +123,7 @@ void read_mavlink(){
       if(mavlink_parse_char(MAVLINK_COMM_0, c, &msg, &status)) {
   //       messageCounter = 0; 
          mavlink_active = 1;
-         if(mavlink_active && LeRiPatt == 6) LeRiPatt = 0;
+         //if(mavlink_active && LeRiPatt == 6) LeRiPatt = 0;
         // handle msg
   
         switch(msg.msgid) {
@@ -191,10 +191,22 @@ void read_mavlink(){
     //          dbPRNL("MAV SYS_STATUS");
               iob_vbat_A = (mavlink_msg_sys_status_get_voltage_battery(&msg) / 1000.0f);
               iob_battery_remaining_A = mavlink_msg_sys_status_get_battery_remaining(&msg);
-              uint16_t tmp = mavlink_msg_sys_status_get_battery_remaining(&msg);
   
-              cellVvalue();
+#ifdef LED_STRIP
+              if (numCells == 0 && iob_vbat_A > 7.5) {
+                if(iob_vbat_A>21.2) numCells = 6;
+                else if(iob_vbat_A>17) numCells = 5;
+                else if(iob_vbat_A>12.8) numCells = 4;
+                else if(iob_vbat_A>7.5) numCells = 3;
+              }
+              
+              if (numCells > 0) cellVoltage = iob_vbat_A / numCells;
+
+#endif
+
 #ifdef FRSKY              
+              uint16_t tmp = mavlink_msg_sys_status_get_battery_remaining(&msg);
+              cellVvalue();
               //---------Backup Battery Frist state--------//
               if(Batt_SR.Plugin_Frist!=TRUE&&iob_vbat_A>9)  //Eeprom never save data && voltage !=0 && Frist plugin volatge
               {
@@ -220,7 +232,6 @@ void read_mavlink(){
                 }   
                 Frsky_Count_Order_Batt=0;       
               }
-#endif              
               //---------Battery Backup------------------//
   
   //            if (tmp < 13) {
@@ -240,6 +251,8 @@ void read_mavlink(){
               } else {
                 iob_battery_remaining_A = tmp;
               }            
+#endif              
+
             }
             break;
             
@@ -307,6 +320,15 @@ void read_mavlink(){
             break;
   
   #endif          
+          case MAVLINK_MSG_ID_RC_CHANNELS_RAW:
+            {
+            //DPL("MAV ID_CHANNELS_RAW");
+              iob_chan1 = mavlink_msg_rc_channels_raw_get_chan1_raw(&msg);
+              iob_chan2 = mavlink_msg_rc_channels_raw_get_chan2_raw(&msg);
+              iob_chan3 = mavlink_msg_rc_channels_raw_get_chan3_raw(&msg);
+              iob_chan4 = mavlink_msg_rc_channels_raw_get_chan4_raw(&msg);
+            }
+            break;
   
           case MAVLINK_MSG_ID_VFR_HUD:
             {
@@ -364,6 +386,7 @@ void read_mavlink(){
 
 }
 
+#ifdef FRSKY
 void cellVvalue() {
   int i;
   //no 3S temporary fix 
@@ -379,7 +402,7 @@ void cellVvalue() {
     cellV[i]=val;
   }
 }
-
+#endif
 
 
 

@@ -51,6 +51,17 @@ int readEP16(int address) {
   return value;
 }
 
+void writeStruct(int address, uint8_t* pointer, uint16_t size) {
+  for (int i = 0; i < size; i++) {
+    EEPROM.write(address + i, *pointer++);
+  }
+}
+
+void readStruct(int address, uint8_t* pointer, uint16_t size) {
+  for (int i = 0; i < size; i++) {
+    *pointer++ = EEPROM.read(address + i);
+  }
+}
 
 
 // Default patterns should look like these:
@@ -78,11 +89,12 @@ void writeFactorySettings() {
  // Writing all default parameters to EEPROM
  
 #ifdef DUMPEEPROMTELEMETRY
-  Serial.println("EEPROM Reset to factory settings"); 
+  Serial.println(F("EEPROM Reset to factory settings")); 
 #endif  
 
- DPL("EEPROM Reset to factory settings");
+ DPL(F("EEPROM Reset to factory settings"));
 
+#ifdef JD_IO
  // Default patterns 1-16, BIN 
  writeEP2(pat01_ADDR, 0b11000000, 0b00000000);
  writeEP2(pat02_ADDR, 0b11110000, 0b11110000);
@@ -148,12 +160,22 @@ void writeFactorySettings() {
  writeEEPROM(FLASH_IO_ADDR, 0);    // Future extra flasher 
  writeEEPROM(LEDPIN_IO_ADDR, 10);  // HeartBeat LEDPIN, should be 13 
 
- writeEEPROM(STRIP_IO_ADDR, 7);
- writeEP16(MAVLINK_BAUD, 57600);
-
  writeEEPROM(ISFRSKY, 1);           // Activate FrSky protocol output from D5, D6. By default yes
  
  writeEEPROM(BatteryAlarm_Percentage_ADDR, 15);  // Percentage to trigger battery alarm, default minvoltage + 15% 
+
+#endif
+
+#ifdef LED_STRIP
+  writeStruct(LED_CONFIGS, (uint8_t*)ledConfigs, sizeof(ledConfigs));  
+  writeStruct(COLOR_CONFIGS, (uint8_t*)colors, sizeof(colors));
+  writeStruct(MODE_CONFIGS, (uint8_t*)modeColors, sizeof(modeColors));
+#endif
+
+ writeEEPROM(STRIP_IO_ADDR, 7);
+ writeEP16(MAVLINK_BAUD, 57600);
+ writeEEPROM(LOWBATT_PCT, 20);
+ writeEP16(LOWBATT_VOLT, 3300); //*1000
 
  // Write details for versioncheck to EEPROM
  writeEEPROM(CHK1, 22);

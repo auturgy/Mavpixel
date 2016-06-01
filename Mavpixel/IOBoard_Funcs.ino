@@ -28,7 +28,7 @@
 
 */
 
-void changeBaudRate(int newBaud) {
+void changeBaudRate(uint32_t newBaud) {
   Serial.flush();
   Serial.begin(newBaud);
   while(Serial.available()) Serial.read();
@@ -71,9 +71,14 @@ void CheckFlightMode() {
     if(iob_mode == 5) {flMode = LOIT;baseState=6;}   // Loiter
     if(iob_mode == 6) {flMode = RETL;baseState=1;}   // Return to Launch
     if(iob_mode == 7) {flMode = CIRC;baseState=2;}   // Circle
-    if(iob_mode == 8) {flMode = POSI;baseState=3;}   // Position
-    if(iob_mode == 9) {flMode = LAND;baseState=4;}  // Land
-    if(iob_mode == 10) {flMode = OFLO;baseState=5;}  // OF_Loiter
+    if(iob_mode == 9) {flMode = LAND;baseState=3;}  // Land
+    if(iob_mode == 11) {flMode = DRFT;baseState=4;}  // Drift
+    if(iob_mode == 13) {flMode = SPRT;baseState=5;}  // Sport
+    if(iob_mode == 14) {flMode = FLIP;baseState=6;}  // Flip
+    if(iob_mode == 15) {flMode = ATUN;baseState=1;}  // Autotune
+    if(iob_mode == 16) {flMode = POSH;baseState=2;}   // Poshold
+    if(iob_mode == 17) {flMode = BRAK;baseState=3;}  // Brake
+    if(iob_mode == 18) {flMode = THRO;baseState=4;}  // Throw
   }
   else if(apm_mav_type == 1) { // ArduPlane
     if(iob_mode == 2 ) {flMode = STAB;baseState=1;}  // Stabilize
@@ -85,6 +90,10 @@ void CheckFlightMode() {
     if(iob_mode == 15) {flMode = GUID;baseState=1;}  // GUIDED
     if(iob_mode == 10 ){flMode = AUTO;baseState=2;} // AUTO
     if(iob_mode == 1) {flMode = CIRC;baseState=3;}   // CIRCLE
+    if(iob_mode == 3) {flMode = TRAN;baseState=4;}   // Training
+    if(iob_mode == 4) {flMode = ACRO;baseState=5;}   // Acro
+    if(iob_mode == 7) {flMode = CRUS;baseState=6;}   // Cruise
+    if(iob_mode == 8) {flMode = ATUN;baseState=1;}   // Autotune
   }
 #ifdef JD_IO
 #ifndef NEWPAT  
