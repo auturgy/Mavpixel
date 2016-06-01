@@ -4,7 +4,33 @@
 
 //Color conversion and pixel functions
 
-void hsvToRgb24(hsvColor_t* c, CRGB* r)
+void rgbToHsv24(const CRGB* r, hsvColor_t* h)
+{
+    uint8_t min, max, delta;
+    int16_t hue;
+
+    if(r->r < r->g) min = r->r; else min = r->g;
+    if(r->b < min) min = r->b;
+    if(r->r > r->g) max = r->r; else max = r->g;
+    if(r->b > max) max = r->b;
+    h->v = max;                // v, 0..255
+ 
+    delta = max - min;                      // 0..255, < v
+    if( max != 0 ) h->s = (int)(delta)*255 / max;        // s, 0..255
+    else {// r = g = b = 0        // s = 0, v is undefined
+      h->s = 0;
+      h->h = 0;
+      return;
+    }
+    if( r->r == max ) hue = (r->g - r->b) * 60 / delta;        // between yellow & magenta
+    else if( r->g == max ) hue = 120 + (r->b - r->r) * 60 / delta;    // between cyan & yellow
+    else hue = 240 + (r->r - r->g) * 60 / delta;    // between magenta & cyan
+ 
+    if( hue < 0 ) hue += 360;
+    h->h = hue;
+}
+
+void hsvToRgb24(const hsvColor_t* c, CRGB* r)
 {
     uint16_t val = c->v;
     uint16_t sat = 255 - c->s;
@@ -70,21 +96,29 @@ void ledSetup() {
 
 void scaleLedValue(uint16_t index, const uint8_t scalePercent)
 {
-    ledhsv[index].v = ((uint16_t)ledhsv[index].v * scalePercent / 100);
+  hsvColor_t h;
+  rgbToHsv24(&ledrgb[index], &h);
+  h.v = ((uint16_t)ledhsv[index].v * scalePercent / 100);
+  hsvToRgb24(&h, &ledrgb[index]);
 }
  
 void setLedHsv(uint16_t index, const hsvColor_t *color)
 {
-    ledhsv[index].h = color->h;
-    ledhsv[index].s = color->s;
-    ledhsv[index].v = color->v;
+  hsvToRgb24(color, &ledrgb[index]);  
+  //rgbColor24bpp_t* r = hsvToRgb24(color);
+    //leds[index].setRGB(r->rgb.r, r->rgb.g, r->rgb.b);
+//    ledhsv[index].h = color->h;
+//    ledhsv[index].s = color->s;
+//    ledhsv[index].v = color->v;
 }
 
 void getLedHsv(uint16_t index, hsvColor_t *color)
 {
-    color->h = ledhsv[index].h;
-    color->s = ledhsv[index].s;
-    color->v = ledhsv[index].v;
+    //uint32_t c;
+    rgbToHsv24(&ledrgb[index], color);
+//    color->h = ledhsv[index].h;
+//    color->s = ledhsv[index].s;
+//    color->v = ledhsv[index].v;
 }
 
 void setBrightness(uint8_t v){
@@ -92,8 +126,6 @@ void setBrightness(uint8_t v){
 }
 
 void show() {
-  for (int i = 0; i < MAX_LED_STRIP_LENGTH; i++) 
-    hsvToRgb24(&ledhsv[i], &ledrgb[i]);
   FastLED.show();
 }
 

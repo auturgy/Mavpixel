@@ -1,14 +1,17 @@
 /*
 ///////////////////////////////////////////////////////////////////////
-//
-// Name         : jD-IOBoard_MAVlink Driver
+Mavpixel Mavlink Neopixel bridge
+(c) 2016 Nick Metcalfe
+
+Derived from: jD-IOBoard_MAVlink Driver
 // Version      : v0.5-FrSky, 06-11-2013
 // Author       : Jani Hirvinen, jani@j....com
 // Co-Author(s) : 
 //      Sandro Beningo     (MAVLink routines)
 //      Mike Smith         (BetterStream and FastSerial libraries)
-//
-//
+
+
+
 // If you use, modify, redistribute, Remember to share your modifications and 
 // you need to include original authors along with your work !!
 //
@@ -43,67 +46,15 @@
 //////////////////////////////////////////////////////////////////////////
 //  Description: 
 // 
-//  This is an Arduino sketch on how to use jD-IOBoard LED Driver board
+//  This is an Arduino sketch on how to use Mavpixel LED Driver board
 //  that listens MAVLink commands and changes patterns accordingly.
 //
 //  If you use, redistribute this please mention original source.
 //
-//  jD-IOBoard pinouts v1.0
-//
-//             S M M G       R T R
-//         5 5 C O I N D D D X X S
-//         V V K S S D 7 6 5 1 1 T
-//         | | | | | | | | | | | |
-//      +----------------------------+
-//      |O O O O O O O O O O O O O   |
-// O1 - |O O   | | |                O| _ DTS 
-// O2 - |O O   3 2 1                O| - RX  F
-// O3 - |O O   1 1 1                O| - TX  T
-// O4 - |O O   D D D                O| - 5V  D
-// O5 - |O O                        O| _ CTS I
-// O6 - |O O O O O O O O   O O O O  O| - GND
-//      +----------------------------+
-//       |   | | | | | |   | | | |
-//       C   G 5 A A A A   S S 5 G
-//       O   N V 0 1 2 3   D C V N
-//       M   D             A L   D
-//
-//  jD-IOBoard pinouts v1.1
-//
-//       1 G   S M M G       R T R
-//       2 N 5 C O I N D D D X X S
-//       V D V K S S D 6 5 2 1 1 T
-//       | | | | | | | | | | | | |
-//      +----------------------------+
-//      |O O O O O O O O O O O O O   |
-// O1 - |O O   | | |                O| _ DTS 
-// O2 - |O O   3 2 1                O| - RX  F
-// O3 - |O O   1 1 1                O| - TX  T
-// O4 - |O O   D D D                O| - 5V  D
-// O5 - |O O                        O| _ CTS I
-// O6 - |O O O O O O O O   O O O O  O| - GND
-//      +----------------------------+
-//       |   | | | | | |   | | | |
-//       C   G 5 A A A A   S S 5 G
-//       O   N V 0 1 2 3   D C V N
-//       M   D             A L   D
-//
-//
-//  Highpower outputs per IOBoard versions
-//
-//  PIN     IOB V1.0     IOB V1.1 
-//  ------------------------------------
-//   O1       D8           D7
-//   O2       D9, PWM      D8
-//   O3       D10, PWM     D9, PWM
-//   O4       D4           D10, PWM
-//   O5       D3, PWM      D3, PWM
-//   O6       D2           D4
-//
-//
-// More information, check http://www.jdrones.com/
-//
-/* **************************************************************************** */
+//  This version uses four strips, maximum eight leds per strip.
+//  WS2812 Led strip outputs:
+//   pins A0 (1-8), A1(9-16), A2(17-24), A3(25-32)
+
  
 /* ************************************************************ */
 /* **************** MAIN PROGRAM - MODULES ******************** */
@@ -193,7 +144,7 @@
 #define Circle_Dly 1000
 
 #define ledPin 13     // Heartbeat LED if any
-#define LOOPTIME  50  // Main loop time for heartbeat
+#define LOOPTIME  100  // Main loop time for heartbeat
 //#define BAUD 57600    // Serial speed
 
 #define TELEMETRY_SPEED  57600  // How fast our MAVLink telemetry is coming to Serial port
@@ -617,6 +568,10 @@ void loop()
         if(debug == 4) dumpVars(); 
       }
 #endif
+#ifdef LED_STRIP
+      updateLedStrip();
+#endif
+
     }
     
 #ifdef JD_IO
@@ -720,10 +675,6 @@ void OnMavlinkTimer()
     //DPN(F("MC:")); 
     //DPL(messageCounter);
 #endif    
-
-#ifdef LED_STRIP
-    updateLedStrip();
-#endif
 
 
     if(messageCounter >= 20 && mavlink_active) {

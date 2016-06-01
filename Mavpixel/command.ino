@@ -1,3 +1,5 @@
+//Simple command interpreter
+
 
 const char PROGMEM cmd_version_P[] = "version";
 const char PROGMEM cmd_quit_P[] = "quit";
