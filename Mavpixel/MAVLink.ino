@@ -47,8 +47,8 @@ mavlink_system_t mavlink_system = {12,1,0,0};
 //static bool mavlink_active;
 static uint8_t crlf_count = 0;
 
-static int packet_drops = 0;
-static int parse_error = 0;
+//static int packet_drops = 0;
+//static int parse_error = 0;
 
 
 
@@ -114,7 +114,7 @@ void read_mavlink(){
            cmdBuffer[cmdLen] = c;
            cmdBuffer[cmdLen + 1] = 0;
            cmdLen++;
-           Serial.print((char)c);
+           Serial.print((char)c);      //Echo
          }
        }
     } else {
@@ -140,7 +140,7 @@ void read_mavlink(){
                 iob_old_mode = iob_mode;
                 CheckFlightMode();
               }                
-              iob_nav_mode = 0;
+//              iob_nav_mode = 0;
   
   //            if((mavlink_msg_heartbeat_get_base_mode(&msg) & MOTORS_ARMED) == MOTORS_ARMED)
               if(isBit(mavlink_msg_heartbeat_get_base_mode(&msg),MOTORS_ARMED)) {
@@ -275,13 +275,13 @@ void read_mavlink(){
   #else
           case MAVLINK_MSG_ID_GPS_RAW_INT:
             { 
-              iob_lat = mavlink_msg_gps_raw_int_get_lat(&msg) / 10000000.0f;
+              //iob_lat = mavlink_msg_gps_raw_int_get_lat(&msg) / 10000000.0f;
               
               iob_hdop=(mavlink_msg_gps_raw_int_get_eph(&msg)/100);
               //iob_vdop=mavlink_msg_gps_raw_int_get_epv(&msg);
               
   // Patch from Simon / DIYD. Converting GPS locations to correct format            
-              if (iob_lat < 0) {
+/*              if (iob_lat < 0) {
                 iob_lat_dir = 'S';
                 iob_lat = fabs(iob_lat);
               } else {
@@ -312,8 +312,8 @@ void read_mavlink(){
               sec_dat = dec_min * 60;
               iob_lon = (deg_dat * 100) + min_dat + (sec_dat/100);
    // end of new lon code
-   
-              iob_gps_alt = mavlink_msg_gps_raw_int_get_alt(&msg) / 1000.0f;
+*/   
+//              iob_gps_alt = mavlink_msg_gps_raw_int_get_alt(&msg) / 1000.0f;
               iob_fix_type = mavlink_msg_gps_raw_int_get_fix_type(&msg);
               iob_satellites_visible = mavlink_msg_gps_raw_int_get_satellites_visible(&msg);
             }
@@ -332,22 +332,22 @@ void read_mavlink(){
   
           case MAVLINK_MSG_ID_VFR_HUD:
             {
-              iob_groundspeed = mavlink_msg_vfr_hud_get_groundspeed(&msg);
-              iob_heading = mavlink_msg_vfr_hud_get_heading(&msg);// * 3.60f;//0-100% of 360
+//              iob_groundspeed = mavlink_msg_vfr_hud_get_groundspeed(&msg);
+//              iob_heading = mavlink_msg_vfr_hud_get_heading(&msg);// * 3.60f;//0-100% of 360
               iob_throttle = mavlink_msg_vfr_hud_get_throttle(&msg);
               if(iob_throttle > 100 && iob_throttle < 150) iob_throttle = 100; //Temporary fix for ArduPlane 2.28
               if(iob_throttle < 0 || iob_throttle > 150) iob_throttle = 0; //Temporary fix for ArduPlane 2.28
-              iob_alt = mavlink_msg_vfr_hud_get_alt(&msg);
+//              iob_alt = mavlink_msg_vfr_hud_get_alt(&msg);
             }
             break;
             
           case MAVLINK_MSG_ID_SCALED_PRESSURE:
             {
-              iob_temperature = mavlink_msg_scaled_pressure_get_temperature(&msg) / 100;  // scaling 0.01
+//              iob_temperature = mavlink_msg_scaled_pressure_get_temperature(&msg) / 100;  // scaling 0.01
             }
             break;
   
-          case MAVLINK_MSG_ID_ATTITUDE:
+/*          case MAVLINK_MSG_ID_ATTITUDE:
             {
   //          DPL("MAV ID_ATTITUDE");
               iob_pitch = ToDeg(mavlink_msg_attitude_get_pitch(&msg));
@@ -355,7 +355,7 @@ void read_mavlink(){
               iob_yaw = ToDeg(mavlink_msg_attitude_get_yaw(&msg));
             }
             break;
-          case MAVLINK_MSG_ID_HWSTATUS:  
+*/          case MAVLINK_MSG_ID_HWSTATUS:  
             {
               // Read our HW-Status
               boardVoltage = mavlink_msg_hwstatus_get_Vcc(&msg) / 1000.0f;      
@@ -381,8 +381,8 @@ void read_mavlink(){
     //next one
   }
   // Update global packet drops counter
-  packet_drops += status.packet_rx_drop_count;
-  parse_error += status.parse_error;
+  //packet_drops += status.packet_rx_drop_count;
+  //parse_error += status.parse_error;
 
 }
 

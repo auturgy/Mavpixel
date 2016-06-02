@@ -63,6 +63,16 @@ void readStruct(int address, uint8_t* pointer, uint16_t size) {
   }
 }
 
+void writeModeColor(uint8_t mode, uint8_t index, uint8_t color) {
+  int loc = MODE_CONFIGS + (mode * 6) + index;
+  EEPROM.write(loc, color);
+}
+
+uint8_t readModeColor(uint8_t mode, uint8_t index) {
+  int loc = MODE_CONFIGS + (mode * 6) + index;
+  return EEPROM.read(loc);
+}
+
 
 // Default patterns should look like these:
 //  { 0,0,0,0,0,0,0,0 ,0,0,0,0,0,0,0,0  },    // 0   0x00 , 0x00
@@ -169,7 +179,7 @@ void writeFactorySettings() {
 #ifdef LED_STRIP
   writeStruct(LED_CONFIGS, (uint8_t*)ledConfigs, sizeof(ledConfigs));  
   writeStruct(COLOR_CONFIGS, (uint8_t*)colors, sizeof(colors));
-  writeStruct(MODE_CONFIGS, (uint8_t*)modeColors, sizeof(modeColors));
+  writeModeColorsDefault();
 #endif
 
  writeEEPROM(STRIP_IO_ADDR, 7);

@@ -80,7 +80,7 @@ Derived from: jD-IOBoard_MAVlink Driver
 /* **********************************************/
 /* ***************** INCLUDES *******************/
 
-//#define membug   // undefine for real firmware
+#define membug   // undefine for real firmware
 //#define FORCEINIT  // You should never use this unless you know what you are doing 
 
 #define hiWord(w) ((w) >> 8)
@@ -93,6 +93,7 @@ Derived from: jD-IOBoard_MAVlink Driver
 #include <math.h>
 #include <inttypes.h>
 #include <avr/pgmspace.h>
+#include <avr/wdt.h>
 //#include <Wire.h>
 
 // Get the common arduino functions
@@ -102,14 +103,12 @@ Derived from: jD-IOBoard_MAVlink Driver
 	#include "wiring.h"
 #endif
 #include <EEPROM.h>
-#include <SimpleTimer.h>
+//#include <SimpleTimer.h>
 #include <GCS_MAVLink.h>
 
-/*
 #ifdef membug
 #include <MemoryFree.h>
 #endif
-*/
 
 #include <SoftwareSerial.h>
 
@@ -131,7 +130,7 @@ Derived from: jD-IOBoard_MAVlink Driver
 /* ***************** DEFINITIONS *******************/
 
 #define VER "2.0"   // Software version
-#define CHKVER 40    // Version number to check from EEPROM
+#define CHKVER 43    // Version number to check from EEPROM
 
 // These are not in real use, just for reference
 //#define O1 8      // High power Output 1
@@ -144,7 +143,7 @@ Derived from: jD-IOBoard_MAVlink Driver
 #define Circle_Dly 1000
 
 #define ledPin 13     // Heartbeat LED if any
-#define LOOPTIME  100  // Main loop time for heartbeat
+#define LOOPTIME  50  // Main loop time for heartbeat
 //#define BAUD 57600    // Serial speed
 
 #define TELEMETRY_SPEED  57600  // How fast our MAVLink telemetry is coming to Serial port
@@ -232,7 +231,6 @@ struct Altitude_Status{
 //===================|Altitude System|======================//
 #endif
 
-
 byte ledState;
 byte baseState;  // Bit mask for different basic output LEDs like so called Left/Right 
 
@@ -245,7 +243,7 @@ byte baseState;  // Bit mask for different basic output LEDs like so called Left
 // Objects and Serial definitions
 FastSerialPort0(Serial);
 
-SimpleTimer  mavlinkTimer;
+//SimpleTimer  mavlinkTimer;
 
 #ifdef LED_STRIP
 
@@ -254,7 +252,6 @@ SimpleTimer  mavlinkTimer;
 #define NEO_PIN3 16
 #define NEO_PIN4 17
 CRGB ledrgb[32];
-hsvColor_t ledhsv[32]; 
 #endif
 
 
@@ -386,6 +383,7 @@ debug = 4;
     Serial.println(CHKVER);
 #endif    
     // Write factory settings on EEPROM
+    Serial.println(F("Factory Reset."));
     DPN(F("Writing EEPROM..."));
     writeFactorySettings();
     DPL(F(" done."));
@@ -481,10 +479,10 @@ debug = 4;
 #ifdef LED_STRIP
   // Read led strip configs from EEPROM
   lowBattPct = readEEPROM(LOWBATT_PCT);
-  lowBattVolt = readEEPROM(LOWBATT_VOLT) / 1000.0f;
+  lowBattVolt = readEP16(LOWBATT_VOLT) / 1000.0f;
   readStruct(LED_CONFIGS, (uint8_t*)ledConfigs, sizeof(ledConfigs));  
   readStruct(COLOR_CONFIGS, (uint8_t*)colors, sizeof(colors));
-  readStruct(MODE_CONFIGS, (uint8_t*)modeColors, sizeof(modeColors));
+  //readStruct(MODE_CONFIGS, (uint8_t*)modeColors, sizeof(modeColors));
 #endif
 
 
@@ -502,10 +500,10 @@ debug = 4;
 
   // Startup MAVLink timers, 50ms runs
   // this affects pattern speeds too.
-  mavlinkTimer.Set(&OnMavlinkTimer, 50);
+//  mavlinkTimer.Set(&OnMavlinkTimer, 50);
 
   // House cleaning, enable timers
-  mavlinkTimer.Enable();
+//  mavlinkTimer.Enable();
   
   // Enable MAV rate request, yes always enable it for in case.   
   // if MAVLink flows correctly, this flag will be changed to DIS
@@ -571,9 +569,7 @@ void loop()
 #ifdef LED_STRIP
       updateLedStrip();
 #endif
-
     }
-    
 #ifdef JD_IO
     // Update base lights if any
     updateBase();
@@ -612,7 +608,7 @@ void loop()
     } 
 
     read_mavlink();
-    mavlinkTimer.Run();
+//    mavlinkTimer.Run();
 #ifdef JD_IO
     updatePWM();
 #endif
@@ -675,7 +671,6 @@ void OnMavlinkTimer()
     //DPN(F("MC:")); 
     //DPL(messageCounter);
 #endif    
-
 
     if(messageCounter >= 20 && mavlink_active) {
       DPL(F("We lost MAVLink"));

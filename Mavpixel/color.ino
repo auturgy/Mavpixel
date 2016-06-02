@@ -4,6 +4,7 @@
 
 //Color conversion and pixel functions
 
+
 void rgbToHsv24(const CRGB* r, hsvColor_t* h)
 {
     uint8_t min, max, delta;
@@ -98,27 +99,18 @@ void scaleLedValue(uint16_t index, const uint8_t scalePercent)
 {
   hsvColor_t h;
   rgbToHsv24(&ledrgb[index], &h);
-  h.v = ((uint16_t)ledhsv[index].v * scalePercent / 100);
+  h.v = ((uint16_t)h.v * scalePercent / 100);
   hsvToRgb24(&h, &ledrgb[index]);
 }
  
 void setLedHsv(uint16_t index, const hsvColor_t *color)
 {
-  hsvToRgb24(color, &ledrgb[index]);  
-  //rgbColor24bpp_t* r = hsvToRgb24(color);
-    //leds[index].setRGB(r->rgb.r, r->rgb.g, r->rgb.b);
-//    ledhsv[index].h = color->h;
-//    ledhsv[index].s = color->s;
-//    ledhsv[index].v = color->v;
+    hsvToRgb24(color, &ledrgb[index]);  
 }
 
 void getLedHsv(uint16_t index, hsvColor_t *color)
 {
-    //uint32_t c;
     rgbToHsv24(&ledrgb[index], color);
-//    color->h = ledhsv[index].h;
-//    color->s = ledhsv[index].s;
-//    color->v = ledhsv[index].v;
 }
 
 void setBrightness(uint8_t v){

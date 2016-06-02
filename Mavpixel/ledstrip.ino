@@ -75,9 +75,9 @@ static uint32_t nextIndicatorFlashAt = 0;
 static uint32_t nextWarningFlashAt = 0;
 static uint32_t nextRotationUpdateAt = 0;
 
-#define LED_STRIP_20HZ ((1000 * 1000) / 20)
-#define LED_STRIP_10HZ ((1000 * 1000) / 10)
-#define LED_STRIP_5HZ ((1000 * 1000) / 5)
+#define LED_STRIP_20HZ (1000 / 20)
+#define LED_STRIP_10HZ (1000 / 10)
+#define LED_STRIP_5HZ (1000 / 5)
 
 //#if MAX_LED_STRIP_LENGTH > WS2811_LED_STRIP_LENGTH
 //#error "Led strip length must match driver"
@@ -169,50 +169,56 @@ typedef enum {
 // See colors[] and defaultColors[] and applyDefaultColors[]
 
 //Single array for efficiency now there are many more modes
-modeColorIndexes_t modeColors[] = {
+static const uint8_t PROGMEM ModeColors[] = {
 //Stabilize  
-  {COLOR_GREEN, COLOR_DARK_VIOLET, COLOR_GREEN, COLOR_DEEP_PINK, COLOR_BLUE, COLOR_ORANGE},
+  COLOR_GREEN, COLOR_DARK_VIOLET, COLOR_GREEN, COLOR_DEEP_PINK, COLOR_BLUE, COLOR_ORANGE,
 //Acro
-  {COLOR_LIME_GREEN, COLOR_DARK_VIOLET, COLOR_GREEN, COLOR_DEEP_PINK, COLOR_BLUE, COLOR_ORANGE},
+  COLOR_LIME_GREEN, COLOR_DARK_VIOLET, COLOR_GREEN, COLOR_DEEP_PINK, COLOR_BLUE, COLOR_ORANGE,
 //Althold
-  {COLOR_BLUE, COLOR_DARK_VIOLET, COLOR_GREEN, COLOR_DEEP_PINK, COLOR_BLUE, COLOR_ORANGE},
+  COLOR_BLUE, COLOR_DARK_VIOLET, COLOR_GREEN, COLOR_DEEP_PINK, COLOR_BLUE, COLOR_ORANGE,
 //Auto
-  {COLOR_CYAN, COLOR_DARK_VIOLET, COLOR_RED, COLOR_DEEP_PINK, COLOR_BLUE, COLOR_ORANGE},
+  COLOR_CYAN, COLOR_DARK_VIOLET, COLOR_RED, COLOR_DEEP_PINK, COLOR_BLUE, COLOR_ORANGE,
 //Guided
-  {COLOR_MINT_GREEN, COLOR_DARK_VIOLET, COLOR_ORANGE, COLOR_DEEP_PINK, COLOR_BLUE, COLOR_ORANGE},
+  COLOR_MINT_GREEN, COLOR_DARK_VIOLET, COLOR_ORANGE, COLOR_DEEP_PINK, COLOR_BLUE, COLOR_ORANGE,
 //Loiter
-  {COLOR_LIGHT_BLUE, COLOR_DARK_VIOLET, COLOR_RED, COLOR_DEEP_PINK, COLOR_BLUE, COLOR_ORANGE},
+  COLOR_LIGHT_BLUE, COLOR_DARK_VIOLET, COLOR_RED, COLOR_DEEP_PINK, COLOR_BLUE, COLOR_ORANGE,
 //RTL
-  {COLOR_ORANGE, COLOR_DARK_VIOLET, COLOR_RED, COLOR_DEEP_PINK, COLOR_BLUE, COLOR_ORANGE},
+  COLOR_ORANGE, COLOR_DARK_VIOLET, COLOR_RED, COLOR_DEEP_PINK, COLOR_BLUE, COLOR_ORANGE,
 //Circle
-  {COLOR_DEEP_PINK, COLOR_DARK_VIOLET, COLOR_RED, COLOR_DEEP_PINK, COLOR_BLUE, COLOR_ORANGE},
+  COLOR_DEEP_PINK, COLOR_DARK_VIOLET, COLOR_RED, COLOR_DEEP_PINK, COLOR_BLUE, COLOR_ORANGE,
 //Land
-  {COLOR_MAGENTA, COLOR_DARK_VIOLET, COLOR_RED, COLOR_DEEP_PINK, COLOR_BLUE, COLOR_ORANGE},
+  COLOR_MAGENTA, COLOR_DARK_VIOLET, COLOR_RED, COLOR_DEEP_PINK, COLOR_BLUE, COLOR_ORANGE,
 //Drift
-  {COLOR_DARK_VIOLET, COLOR_DARK_VIOLET, COLOR_RED, COLOR_DEEP_PINK, COLOR_BLUE, COLOR_ORANGE},
+  COLOR_DARK_VIOLET, COLOR_DARK_VIOLET, COLOR_RED, COLOR_DEEP_PINK, COLOR_BLUE, COLOR_ORANGE,
 //Sport
-  {COLOR_YELLOW, COLOR_DARK_VIOLET, COLOR_RED, COLOR_DEEP_PINK, COLOR_BLUE, COLOR_ORANGE},
+  COLOR_YELLOW, COLOR_DARK_VIOLET, COLOR_RED, COLOR_DEEP_PINK, COLOR_BLUE, COLOR_ORANGE,
 //Flip
-  {COLOR_RED, COLOR_DARK_VIOLET, COLOR_RED, COLOR_DEEP_PINK, COLOR_BLUE, COLOR_ORANGE},
+  COLOR_RED, COLOR_DARK_VIOLET, COLOR_RED, COLOR_DEEP_PINK, COLOR_BLUE, COLOR_ORANGE,
 //Autotune
-  {COLOR_WHITE, COLOR_ORANGE, COLOR_RED, COLOR_ORANGE, COLOR_BLUE, COLOR_ORANGE},
+  COLOR_WHITE, COLOR_ORANGE, COLOR_RED, COLOR_ORANGE, COLOR_BLUE, COLOR_ORANGE,
 //Poshold
-  {COLOR_BLUE, COLOR_DARK_VIOLET, COLOR_RED, COLOR_DEEP_PINK, COLOR_BLUE, COLOR_ORANGE},
+  COLOR_BLUE, COLOR_DARK_VIOLET, COLOR_RED, COLOR_DEEP_PINK, COLOR_BLUE, COLOR_ORANGE,
 //Brake
-  {COLOR_RED, COLOR_RED, COLOR_RED, COLOR_RED, COLOR_BLUE, COLOR_ORANGE},
+  COLOR_RED, COLOR_RED, COLOR_RED, COLOR_RED, COLOR_BLUE, COLOR_ORANGE,
 //Throw
-  {COLOR_YELLOW, COLOR_YELLOW, COLOR_YELLOW, COLOR_YELLOW, COLOR_BLUE, COLOR_ORANGE},
+  COLOR_YELLOW, COLOR_YELLOW, COLOR_YELLOW, COLOR_YELLOW, COLOR_BLUE, COLOR_ORANGE,
 //Manual
-  {COLOR_YELLOW, COLOR_DARK_VIOLET, COLOR_GREEN, COLOR_DEEP_PINK, COLOR_BLUE, COLOR_ORANGE},
+  COLOR_YELLOW, COLOR_DARK_VIOLET, COLOR_GREEN, COLOR_DEEP_PINK, COLOR_BLUE, COLOR_ORANGE,
 //FBWA
-  {COLOR_BLUE, COLOR_DARK_VIOLET, COLOR_RED, COLOR_DEEP_PINK, COLOR_BLUE, COLOR_ORANGE},
+  COLOR_BLUE, COLOR_DARK_VIOLET, COLOR_RED, COLOR_DEEP_PINK, COLOR_BLUE, COLOR_ORANGE,
 //FBWB
-  {COLOR_MAGENTA, COLOR_DARK_VIOLET, COLOR_RED, COLOR_DEEP_PINK, COLOR_BLUE, COLOR_ORANGE},
+  COLOR_MAGENTA, COLOR_DARK_VIOLET, COLOR_RED, COLOR_DEEP_PINK, COLOR_BLUE, COLOR_ORANGE,
 //Training
-  {COLOR_RED, COLOR_DARK_VIOLET, COLOR_ORANGE, COLOR_DEEP_PINK, COLOR_BLUE, COLOR_ORANGE},
+  COLOR_RED, COLOR_DARK_VIOLET, COLOR_ORANGE, COLOR_DEEP_PINK, COLOR_BLUE, COLOR_ORANGE,
 //Cruise
-  {COLOR_DARK_VIOLET, COLOR_DARK_VIOLET, COLOR_RED, COLOR_DEEP_PINK, COLOR_BLUE, COLOR_ORANGE},
+  COLOR_DARK_VIOLET, COLOR_DARK_VIOLET, COLOR_RED, COLOR_DEEP_PINK, COLOR_BLUE, COLOR_ORANGE,
 };  
+
+void writeModeColorsDefault() {
+  const uint8_t* p = &ModeColors[0];
+  for (int i = 0; i < sizeof(ModeColors); i++)
+      EEPROM.write(MODE_CONFIGS + i, pgm_read_byte(p + i));
+}
 
 uint8_t ledGridWidth;
 uint8_t ledGridHeight;
@@ -522,34 +528,34 @@ void printLedConfig(uint8_t ledIndex)
 }
 
 
-void applyDirectionalModeColor(const uint8_t ledIndex, const ledConfig_t *ledConfig, const modeColorIndexes_t *modeColors)
+void applyDirectionalModeColor(const uint8_t ledIndex, const ledConfig_t *ledConfig, uint8_t mode)
 {
-    // apply up/down colors regardless of quadrant.
-    if ((ledConfig->flags & LED_DIRECTION_UP)) {
-        setLedHsv(ledIndex, colors[modeColors->up]);
-    }
-
-    if ((ledConfig->flags & LED_DIRECTION_DOWN)) {
-        setLedHsv(ledIndex, colors[modeColors->down]);
-    }
 
     // override with n/e/s/w colors to each n/s e/w half - bail at first match.
-    if ((ledConfig->flags & LED_DIRECTION_WEST) && GET_LED_X(ledConfig) <= highestXValueForWest) {
-        setLedHsv(ledIndex, colors[modeColors->west]);
-    }
-
-    if ((ledConfig->flags & LED_DIRECTION_EAST) && GET_LED_X(ledConfig) >= lowestXValueForEast) {
-        setLedHsv(ledIndex, colors[modeColors->east]);
-    }
-
-    if ((ledConfig->flags & LED_DIRECTION_NORTH) && GET_LED_Y(ledConfig) <= highestYValueForNorth) {
-        setLedHsv(ledIndex, colors[modeColors->north]);
-    }
-
     if ((ledConfig->flags & LED_DIRECTION_SOUTH) && GET_LED_Y(ledConfig) >= lowestYValueForSouth) {
-        setLedHsv(ledIndex, colors[modeColors->south]);
+        setLedHsv(ledIndex, colors[readModeColor(mode, MCI_SOUTH)]);
     }
 
+    else if ((ledConfig->flags & LED_DIRECTION_NORTH) && GET_LED_Y(ledConfig) <= highestYValueForNorth) {
+        setLedHsv(ledIndex, colors[readModeColor(mode, MCI_NORTH)]);
+    }
+
+    else if ((ledConfig->flags & LED_DIRECTION_EAST) && GET_LED_X(ledConfig) >= lowestXValueForEast) {
+        setLedHsv(ledIndex, colors[readModeColor(mode, MCI_EAST)]);
+    }
+
+    else if ((ledConfig->flags & LED_DIRECTION_WEST) && GET_LED_X(ledConfig) <= highestXValueForWest) {
+        setLedHsv(ledIndex, colors[readModeColor(mode, MCI_WEST)]);
+    }
+
+    // apply up/down colors regardless of quadrant.
+    else if ((ledConfig->flags & LED_DIRECTION_DOWN)) {
+        setLedHsv(ledIndex, colors[readModeColor(mode, MCI_DOWN)]);
+    }
+
+    else if ((ledConfig->flags & LED_DIRECTION_UP)) {
+        setLedHsv(ledIndex, colors[readModeColor(mode, MCI_UP)]);
+    }
 }
 
 void applyQuadrantColor(const uint8_t ledIndex, const ledConfig_t *ledConfig, const quadrant_e quadrant, const hsvColor_t *color)
@@ -609,24 +615,8 @@ void applyLedModeLayer(void)
             continue;
         }
 
-        applyDirectionalModeColor(ledIndex, ledConfig, &modeColors[flMode]);
-
-/*        if (1){//FLIGHT_MODE(HEADFREE_MODE)) {
-            applyDirectionalModeColor(ledIndex, ledConfig, &headfreeModeColors);
-#ifdef MAG
-        } else if (0){//FLIGHT_MODE(MAG_MODE)) {
-            applyDirectionalModeColor(ledIndex, ledConfig, &magModeColors);
-#endif
-#ifdef BARO
-        } else if (0){//FLIGHT_MODE(BARO_MODE)) {
-            applyDirectionalModeColor(ledIndex, ledConfig, &baroModeColors);
-#endif
-        } else if (0){//FLIGHT_MODE(HORIZON_MODE)) {
-            applyDirectionalModeColor(ledIndex, ledConfig, &horizonModeColors);
-        } else if (0){//FLIGHT_MODE(ANGLE_MODE)) {
-            applyDirectionalModeColor(ledIndex, ledConfig, &angleModeColors);
-        }
-*/    }
+        applyDirectionalModeColor(ledIndex, ledConfig, flMode);
+    }
 }
 
 
@@ -881,7 +871,6 @@ static void applyLedAnimationLayer(void)
         if (GET_LED_Y(ledConfig) == previousRow) {
             setLedHsv(ledIndex, &hsv_white);
             scaleLedValue(ledIndex, 50);
-
         } else if (GET_LED_Y(ledConfig) == currentRow) {
             setLedHsv(ledIndex, &hsv_white);
         } else if (GET_LED_Y(ledConfig) == nextRow) {
@@ -916,7 +905,7 @@ void updateLedStrip(void)
     }
     
 
-    uint32_t now = micros();
+    uint32_t now = millis();
 
     bool indicatorFlashNow = (int32_t)(now - nextIndicatorFlashAt) >= 0L;
     bool warningFlashNow = (int32_t)(now - nextWarningFlashAt) >= 0L;
@@ -936,11 +925,9 @@ void updateLedStrip(void)
     }
 
     static uint8_t indicatorFlashState = 0;
-
     // LAYER 1
     applyLedModeLayer();
     applyLedThrottleLayer();
-
     // LAYER 2
 
     if (warningFlashNow) {
@@ -1075,17 +1062,17 @@ bool parseMode(const char *modeConfig)
         remainingCharacters = strstr(remainingCharacters, ",");
         if (remainingCharacters) remainingCharacters++;
         else if (componentIndex != 2) return false;
-        else modeColors[mode][val] = color;
+        else writeModeColor(mode, val, color);
     }
     return true;
 }
 
 void printModeConfig(uint8_t mode)
 {
-    Serial.print(modeColors[mode][0]);
+    Serial.print(readModeColor(mode, 0));
     for (int i = 1; i <= MODE_COLOR_INDEX_MAX; i++) {
       Serial.print(",");
-      Serial.print(modeColors[mode][i]);
+      Serial.print(readModeColor(mode, i));
     }
 }
 

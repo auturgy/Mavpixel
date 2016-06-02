@@ -100,16 +100,16 @@ static long p_hbMillis;                         // HeartBeat counter
 static long c_hbMillis;
 static long d_hbMillis = 500;
 
-static int8_t    iob_temperature;
+//static int8_t    iob_temperature;
 static float    iob_vbat_A = 0;                 // Battery A voltage in milivolt
 static uint16_t iob_battery_remaining_A = 0;    // 0 to 100 <=> 0 to 1000
 
 static uint16_t iob_mode = 0;                   // Navigation mode from RC AC2 = CH5, APM = CH8
-static uint8_t  iob_nav_mode = 0;               // Navigation mode from RC AC2 = CH5, APM = CH8
+//static uint8_t  iob_nav_mode = 0;               // Navigation mode from RC AC2 = CH5, APM = CH8
 static uint16_t iob_old_mode = 0;
 
-static float    iob_lat = 0;                    // latidude
-static float    iob_lon = 0;                    // longitude
+//static float    iob_lat = 0;                    // latidude
+//static float    iob_lon = 0;                    // longitude
 static uint8_t  iob_satellites_visible = 0;     // number of satelites
 static uint8_t  iob_fix_type = 0;               // GPS lock 0-1=no fix, 2=2D, 3=3D
 
@@ -118,19 +118,19 @@ static unsigned int iob_hdop=0;
 
 static uint8_t  iob_got_home = 0;               // tels if got home position or not
 
-static int8_t      iob_pitch = 0;                  // pitch form DCM
-static int8_t      iob_roll = 0;                   // roll form DCM
-static int8_t      iob_yaw = 0;                    // relative heading form DCM
+//static int8_t      iob_pitch = 0;                  // pitch form DCM
+//static int8_t      iob_roll = 0;                   // roll form DCM
+//static int8_t      iob_yaw = 0;                    // relative heading form DCM
 
 static uint16_t   iob_chan1 = 1500;
 static uint16_t   iob_chan2 = 1500;
 static uint16_t   iob_chan3 = 1500;
 static uint16_t   iob_chan4 = 1500;
 
-static float    iob_heading = 0;                // ground course heading from GPS
-static float    iob_alt = 0;                    // altitude
-static float    iob_gps_alt = 0;                    // altitude
-static float    iob_groundspeed = 0;            // ground speed
+//static float    iob_heading = 0;                // ground course heading from GPS
+//static float    iob_alt = 0;                    // altitude
+//static float    iob_gps_alt = 0;                    // altitude
+//static float    iob_groundspeed = 0;            // ground speed
 static uint16_t iob_throttle = 0;               // throtle
 
 //MAVLink session control
@@ -142,21 +142,21 @@ static uint8_t  apm_mav_system;
 static uint8_t  apm_mav_component;
 static boolean  enable_mav_request = 0;
 
-byte iob_lat_dir;
-byte iob_lon_dir;
+//byte iob_lat_dir;
+//byte iob_lon_dir;
 
-int iob_ampbatt_A;
+//int iob_ampbatt_A;
 
-static float deg_dat;  
-static float dec_deg;
-static float min_dat;
-static float dec_min;
-static float sec_dat;
+//static float deg_dat;  
+//static float dec_deg;
+//static float min_dat;
+//static float dec_min;
+//static float sec_dat;
 
 //byte cell_count;
 //byte cell_numb;
 
-int tempvar;      // Temporary variable used on many places around the IOBoard
+//int tempvar;      // Temporary variable used on many places around the IOBoard
 
 // General states
 byte flMode;          // Our current flight mode as defined

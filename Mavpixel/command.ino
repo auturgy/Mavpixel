@@ -1,6 +1,5 @@
 //Simple command interpreter
 
-
 const char PROGMEM cmd_version_P[] = "version";
 const char PROGMEM cmd_quit_P[] = "quit";
 const char PROGMEM cmd_led_P[] = "led";
@@ -9,6 +8,11 @@ const char PROGMEM cmd_baud_P[] = "baud";
 const char PROGMEM cmd_free_P[] = "free";
 const char PROGMEM cmd_vars_P[] = "vars";
 const char PROGMEM cmd_mode_P[] = "mode_color";
+const char PROGMEM cmd_lbv_P[] = "lowcell";
+const char PROGMEM cmd_lbp_P[] = "lowpct";
+const char PROGMEM cmd_freset_P[] = "factory";
+
+
 
 void enterCommandMode() {
   Serial.print(F("\r\nMavPixel " VER " ready.\r\n#"));
@@ -65,6 +69,15 @@ void doCommand() {
        return;
     }
 
+#ifdef membug
+    //(f) Free RAM.
+    if (strncmp_P(cmdBuffer, cmd_free_P, got) == 0) {
+          Serial.print(F("Free RAM: "));
+          Serial.println(freeMem());
+       return;
+    }
+#endif
+
 #ifdef LED_STRIP
     //(led) Configure leds
     if (strncmp_P(cmdBuffer, cmd_led_P, got) == 0) {
@@ -111,12 +124,43 @@ void doCommand() {
           int i = atoi(arg);
           if (i < 0 || i > 20) Serial.println(F("Range error."));
           printMode(i);
-        } else {
-          if (!parseMode(arg)) Serial.println(F("Parse error."));
-          else writeStruct(MODE_CONFIGS, (uint8_t*)modeColors, sizeof(modeColors));
-        }
+        } else if (!parseMode(arg)) Serial.println(F("Parse error."));
       } else for (int i = 0; i <= 20; i++) printMode(i);
       return;
+    }
+
+    //(lowcell) Low battery cell voltage
+    if (strncmp_P(cmdBuffer, cmd_lbv_P, got) == 0) {
+      if (arg) {
+        float val = (float)(atof(arg));
+        lowBattVolt = val;
+        writeEP16(LOWBATT_VOLT, val * 1000);
+      } else {
+        Serial.print(F("Low battery cell voltage: "));
+        Serial.print(lowBattVolt);
+        Serial.println(F("v"));
+      }
+      return;
+    }
+
+    //(lowpct) Low battery percentage
+    if (strncmp_P(cmdBuffer, cmd_lbp_P, got) == 0) {
+      if (arg) {
+        uint8_t val = atoi(arg);
+        lowBattPct = val;
+        writeEEPROM(LOWBATT_PCT, val);
+      } else {
+        Serial.print(F("Low battery percentage: "));
+        Serial.print(lowBattPct);
+        Serial.println(F("%"));
+      }
+      return;
+    }
+
+    //(factory) Factory Reset.
+    if (got == 7 && strncmp_P(cmdBuffer, cmd_freset_P, got) == 0) {
+       writeFactorySettings();
+       Serial.println(F("Please reset Mavpixel."));
     }
 
 #endif
@@ -124,7 +168,6 @@ void doCommand() {
     //(baud) Configure Mavlink baud rate
     if (strncmp_P(cmdBuffer, cmd_baud_P, got) == 0) {
       if (arg) {
-        Serial.println(arg);
         uint32_t val = atoi(arg);
         if (val > 0) {
           Serial.print(F("Setting baud."));
@@ -147,15 +190,6 @@ void doCommand() {
     }
 #endif
 
-#ifdef membug
-    //(v) Version info.
-    if (strncmp_P(cmdBuffer, cmd_free_P, got) == 0) {
-          Serial.print(F("Freemem: "));
-          Serial.println(freeMem());
-       return;
-    }
-#endif
-
     //(quit) Return to Mavlink mode
     if (strncmp_P(cmdBuffer, cmd_quit_P, got) == 0) {
       Serial.println(F("Resuming Mavlink mode."));
@@ -170,6 +204,9 @@ void doCommand() {
       "led       \tConfigure LEDs.\r\n" 
       "color     \tConfigure colours.\r\n" 
       "mode_color\tConfigure colors for modes\r\n"
+      "lowcell   \tLow battery cell voltage\r\n"
+      "lowpct    \tLow battery percentage\r\n"
+      "factory   \tFactory reset\r\n"
 #endif
       "baud      \tSet serial baud rate.\r\n" 
 #ifdef JD_IO

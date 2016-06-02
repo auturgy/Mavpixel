@@ -81,7 +81,7 @@ typedef enum {
 
 #define MCI_COMPONENT_COUNT (MCI_INDEX + 1)
 
-
+/*
 typedef struct modeColorIndexes_s {
     uint8_t north;
     uint8_t east;
@@ -92,6 +92,13 @@ typedef struct modeColorIndexes_s {
     uint8_t operator[](uint8_t i) const {return *((&north) + i);}
     uint8_t &operator[](uint8_t i) {return *((&north) + i);}
 } modeColorIndexes_t;
+*/
+#define MCI_NORTH 0
+#define MCI_EAST 1
+#define MCI_SOUTH 2
+#define MCI_WEST 3
+#define MCI_UP 4
+#define MCI_DOWN 5
 
 #define MODE_COLOR_INDEX_MAX 5
 
@@ -112,7 +119,6 @@ extern uint8_t ledCount;
 extern uint8_t ledsInRingCount;
 extern ledConfig_t ledConfigs[MAX_LED_STRIP_LENGTH];
 extern hsvColor_t* colors[CONFIGURABLE_COLOR_COUNT];
-extern modeColorIndexes_t modeColors[MAX_MODES + 1];
 
 //PG_DECLARE_ARR(ledConfig_t, MAX_LED_STRIP_LENGTH, ledConfigs);
 //PG_DECLARE_ARR(hsvColor_t, CONFIGURABLE_COLOR_COUNT, colors);
