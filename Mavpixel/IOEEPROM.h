@@ -111,6 +111,7 @@
 #define MAVLINK_BAUD  135   //16 bit
 #define LOWBATT_PCT   137
 #define LOWBATT_VOLT  138    //16 bit
+#define STRIP_BRIGHT  140
 
 // Internal version, check placeholders
 #define CHK1 252

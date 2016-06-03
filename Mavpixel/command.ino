@@ -1,4 +1,7 @@
 //Simple command interpreter
+// Emulates a portion of the Cleanflight CLI
+// LED-related Cleanflight command descriptions mostly apply
+// See: https://github.com/cleanflight/cleanflight/blob/master/docs/LedStrip.md
 
 const char PROGMEM cmd_version_P[] = "version";
 const char PROGMEM cmd_quit_P[] = "quit";
@@ -10,6 +13,7 @@ const char PROGMEM cmd_vars_P[] = "vars";
 const char PROGMEM cmd_mode_P[] = "mode_color";
 const char PROGMEM cmd_lbv_P[] = "lowcell";
 const char PROGMEM cmd_lbp_P[] = "lowpct";
+const char PROGMEM cmd_bright_P[] = "brightness";
 const char PROGMEM cmd_freset_P[] = "factory";
 
 
@@ -47,9 +51,9 @@ void doCommand() {
     int got;
   
     //Chop off EOL.
-    if ((cp = strchr(cmdBuffer, '\r')) != 0)
+    while ((cp = strchr(cmdBuffer, '\r')) != 0)
         *cp = 0;
-    if ((cp = strchr(cmdBuffer, '\n')) != 0)
+    while ((cp = strchr(cmdBuffer, '\n')) != 0)
         *cp = 0;
 
     //Ignore blank lines.
@@ -157,27 +161,46 @@ void doCommand() {
       return;
     }
 
-    //(factory) Factory Reset.
-    if (got == 7 && strncmp_P(cmdBuffer, cmd_freset_P, got) == 0) {
-       writeFactorySettings();
-       Serial.println(F("Please reset Mavpixel."));
+    //(brightness) LED strip brightness
+    if (strncmp_P(cmdBuffer, cmd_bright_P, got) == 0) {
+      if (arg) {
+        int val = atoi(arg);
+        if (val <= 100) {
+          stripBright = (float)val * 2.55f + 0.5f;
+          setBrightness(stripBright);
+          writeEEPROM(STRIP_BRIGHT, stripBright);
+        }
+      } else {
+        Serial.print(F("Strip brightness: "));
+        Serial.print((uint8_t)((float)stripBright / 2.55f));
+        Serial.println(F("%"));
+      }
+      return;
     }
 
 #endif
 
+    //(factory) Factory Reset.
+    if (got == 7 && strncmp_P(cmdBuffer, cmd_freset_P, got) == 0) {
+       // Factory reset request flag 
+       writeEEPROM(FACTORY_RESET, 1);
+       Serial.println(F("Please reset Mavpixel."));
+       return;
+    }
+
     //(baud) Configure Mavlink baud rate
     if (strncmp_P(cmdBuffer, cmd_baud_P, got) == 0) {
       if (arg) {
-        uint32_t val = atoi(arg);
+        uint32_t val = atol(arg);
         if (val > 0) {
-          Serial.print(F("Setting baud."));
+          Serial.print(F("Setting baud: "));
+          Serial.println(val);
           writeEP16(MAVLINK_BAUD, val / 10);
           changeBaudRate(val);
         }
       } else {
-        uint32_t current = readEP16(MAVLINK_BAUD) * 10;
         Serial.print(F("Baud: "));
-        Serial.println(current);
+        Serial.print((uint32_t)readEP16(MAVLINK_BAUD) * 10);
       }
       return;
     }
@@ -206,9 +229,10 @@ void doCommand() {
       "mode_color\tConfigure colors for modes\r\n"
       "lowcell   \tLow battery cell voltage\r\n"
       "lowpct    \tLow battery percentage\r\n"
-      "factory   \tFactory reset\r\n"
+      "brightness\tLED strip brightness.\r\n" 
 #endif
       "baud      \tSet serial baud rate.\r\n" 
+      "factory   \tFactory reset\r\n"
 #ifdef JD_IO
       "vars      \tDump variables.\r\n" 
 #endif

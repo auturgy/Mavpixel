@@ -97,13 +97,8 @@ uint8_t readModeColor(uint8_t mode, uint8_t index) {
 // Write our latest FACTORY settings to EEPROM
 void writeFactorySettings() {
  // Writing all default parameters to EEPROM
+//NOTE: Serial port may not be initialised at this point.
  
-#ifdef DUMPEEPROMTELEMETRY
-  Serial.println(F("EEPROM Reset to factory settings")); 
-#endif  
-
- DPL(F("EEPROM Reset to factory settings"));
-
 #ifdef JD_IO
  // Default patterns 1-16, BIN 
  writeEP2(pat01_ADDR, 0b11000000, 0b00000000);
@@ -183,9 +178,10 @@ void writeFactorySettings() {
 #endif
 
  writeEEPROM(STRIP_IO_ADDR, 7);
- writeEP16(MAVLINK_BAUD, 57600);
+ writeEP16(MAVLINK_BAUD, 5760);
  writeEEPROM(LOWBATT_PCT, 20);
  writeEP16(LOWBATT_VOLT, 3300); //*1000
+ writeEEPROM(STRIP_BRIGHT, 255);
 
  // Write details for versioncheck to EEPROM
  writeEEPROM(CHK1, 22);

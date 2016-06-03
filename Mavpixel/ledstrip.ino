@@ -492,7 +492,7 @@ bool parseLedStripConfig(uint8_t ledIndex, const char *config)
 
     if (!ok) {
         memset(ledConfig, 0, sizeof(ledConfig_t));
-    }
+    } else if (!ledConfig->flags) setLedHsv(ledIndex, &hsv_black);
 
     reevalulateLedConfig();
 
@@ -955,7 +955,7 @@ void updateLedStrip(void)
 
 #ifdef USE_LED_ANIMATION
     if (animationUpdateNow) {
-        nextAnimationUpdateAt = now + LED_STRIP_20HZ;
+        nextAnimationUpdateAt = now + LED_STRIP_10HZ;
         updateLedAnimationState();
     }
     applyLedAnimationLayer();

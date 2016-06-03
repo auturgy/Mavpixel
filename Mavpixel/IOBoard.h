@@ -170,6 +170,7 @@ uint8_t lowBattPct;
 float lowBattVolt;
 uint8_t numCells = 0;
 float cellVoltage = 0;
+uint8_t stripBright = 0;
 #endif
 
 #ifdef JD_IO

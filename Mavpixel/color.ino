@@ -88,6 +88,9 @@ void hsvToRgb24(const hsvColor_t* c, CRGB* r)
 
 #ifdef LED_STRIP
 
+//LEDS have been split into separate strips due to timing issues with the serial receive interrup.
+// See: https://github.com/FastLED/FastLED/wiki/Interrupt-problems
+
 void ledSetup() {
   FastLED.addLeds<NEOPIXEL, NEO_PIN1>(ledrgb, 8);
   FastLED.addLeds<NEOPIXEL, NEO_PIN2>(&ledrgb[8], 8);
@@ -97,10 +100,9 @@ void ledSetup() {
 
 void scaleLedValue(uint16_t index, const uint8_t scalePercent)
 {
-  hsvColor_t h;
-  rgbToHsv24(&ledrgb[index], &h);
-  h.v = ((uint16_t)h.v * scalePercent / 100);
-  hsvToRgb24(&h, &ledrgb[index]);
+  ledrgb[index].r = ((uint16_t)ledrgb[index].r * scalePercent / 100);
+  ledrgb[index].g = ((uint16_t)ledrgb[index].g * scalePercent / 100);
+  ledrgb[index].b = ((uint16_t)ledrgb[index].b * scalePercent / 100);
 }
  
 void setLedHsv(uint16_t index, const hsvColor_t *color)

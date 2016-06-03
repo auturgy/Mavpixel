@@ -317,18 +317,21 @@ void rainbowCycle(uint8_t wait) {
 
 void setup() 
 {
+  boolean eeReset = false;
   
   // Before all, set debug level if we have any. Comment out if not
-debug = 4;  
-#ifdef LED_STRIP
-  ledStripInit();
-  ledStripEnable();
-  setBrightness(32);
-  //while(1) rainbowCycle(5);
-#endif
+//debug = 4;  
+
+  // Check that EEPROM has initial settings, if not write them
+  if((readEEPROM(CHK1) + readEEPROM(CHK2) != CHKVER) || readEEPROM(FACTORY_RESET)) {
+    // Write factory settings on EEPROM
+    eeReset = true;
+    writeFactorySettings();
+  }
+
   
   // Initialize Serial port, speed
-  Serial.begin(TELEMETRY_SPEED);
+  Serial.begin((uint32_t)readEP16(MAVLINK_BAUD) * 10);
 
 
 #ifdef SERDB
@@ -363,43 +366,7 @@ debug = 4;
   frSerial.begin(9600);
 #endif
 
-#ifdef HWRESET
-  digitalWrite(13, HIGH);      // Let's put PULLUP high in pin 13 to avoid accidental erases
-  if(digitalRead(13) == 0) {    
-    DPL(F("Force erase pin LOW, Eracing EEPROM"));
-    DPN(F("Writing EEPROM..."));
-    writeFactorySettings();
-    DPL(F(" done."));
-  }
-#endif    
-  
-  // Check that EEPROM has initial settings, if not write them
-  if(readEEPROM(CHK1) + readEEPROM(CHK2) != CHKVER) {
-#ifdef DUMPEEPROMTELEMETRY
-    Serial.print(CHK1);
-    Serial.print(F(","));
-    Serial.print(CHK2);
-    Serial.print(F(","));
-    Serial.println(CHKVER);
-#endif    
-    // Write factory settings on EEPROM
-    Serial.println(F("Factory Reset."));
-    DPN(F("Writing EEPROM..."));
-    writeFactorySettings();
-    DPL(F(" done."));
-  }
-/* 
-  if(readEEPROM(FACTORY_RESET)) {
-#ifdef DUMPEEPROMTELEMETRY
-    Serial.print(F("Factory reset flag: "));
-    Serial.print(FACTORY_RESET);
-#endif    
-    // Write factory settings on EEPROM
-    DPN(F("Writing EEPROM..."));
-    writeFactorySettings();
-    DPL(F(" done."));
-  }
-*/    
+  Serial.println(F("Mavpixel " VER " initialised."));
  
 #ifdef DUMPEEPROM
   // For debug needs, should never be activated on real-life
@@ -418,6 +385,9 @@ debug = 4;
    DPL(readEEPROM(edump));     
   }
 #endif
+
+    if (eeReset) Serial.println(F("Factory Reset."));
+
 
 #ifdef DUMPEEPROMTELEMETRY
   // For debug needs, should never be activated on real-life
@@ -477,16 +447,17 @@ debug = 4;
 #endif
 
 #ifdef LED_STRIP
+  //Start the strip
+  ledStripInit();
+  ledStripEnable();
   // Read led strip configs from EEPROM
   lowBattPct = readEEPROM(LOWBATT_PCT);
   lowBattVolt = readEP16(LOWBATT_VOLT) / 1000.0f;
   readStruct(LED_CONFIGS, (uint8_t*)ledConfigs, sizeof(ledConfigs));  
   readStruct(COLOR_CONFIGS, (uint8_t*)colors, sizeof(colors));
-  //readStruct(MODE_CONFIGS, (uint8_t*)modeColors, sizeof(modeColors));
+  stripBright = readEEPROM(STRIP_BRIGHT);
+  setBrightness(stripBright);  
 #endif
-
-
-  Serial.println(F("Mavpixel " VER " initialised."));
 
 
   // Jani's debug stuff  
