@@ -73,13 +73,14 @@ static uint16_t iob_battery_remaining_A = 0;    // 0 to 100 <=> 0 to 1000
 
 static uint16_t iob_mode = 0;                   // Navigation mode from RC AC2 = CH5, APM = CH8
 static uint16_t iob_old_mode = 0;
+static uint8_t iob_state = 0;
 
 static uint8_t  iob_satellites_visible = 0;     // number of satelites
 static uint8_t  iob_fix_type = 0;               // GPS lock 0-1=no fix, 2=2D, 3=3D
 static unsigned int iob_hdop=0;
 
-static uint16_t  iob_chan1 = 1500;              //Roll
-static uint16_t  iob_chan2 = 1500;              //Pitch
+static int16_t   iob_chan1 = 1500;              //Roll
+static int16_t   iob_chan2 = 1500;              //Pitch
 static uint16_t  iob_throttle = 0;               // throtle
 
 //MAVLink session control

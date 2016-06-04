@@ -206,6 +206,7 @@ void doCommand() {
       return;
     }
 
+#ifdef USE_LED_ANIMATION
     //(animation) LED strip disarmed animation
     if (strncmp_P(cmdBuffer, cmd_anim_P, got) == 0) {
       if (arg) {
@@ -217,7 +218,8 @@ void doCommand() {
         else println(F("NO"));
       }
       return;
-    }
+    }    
+#endif
 
 #endif
 
@@ -271,7 +273,9 @@ void doCommand() {
       "lowcell   \tLow battery cell voltage\r\n"
       "lowpct    \tLow battery percentage\r\n"
       "brightness\tLED strip brightness\r\n" 
+#ifdef USE_LED_ANIMATION
       "animation \tAnimation when disarmed\r\n" 
+#endif
 #endif
       "baud      \tSet serial baud rate\r\n" 
       "factory   \tFactory reset\r\n"

@@ -31,10 +31,12 @@
 #ifdef USE_LED_ANIMATION
 static uint32_t nextAnimationUpdateAt = 0;
 #endif
-
 static uint32_t nextIndicatorFlashAt = 0;
 static uint32_t nextWarningFlashAt = 0;
 static uint32_t nextRotationUpdateAt = 0;
+#ifdef USE_LED_GPS
+static uint32_t nextGpsFlashAt = 0;
+#endif
 
 #define LED_STRIP_20HZ (1000 / 20)
 #define LED_STRIP_10HZ (1000 / 10)
@@ -238,8 +240,8 @@ static const uint16_t PROGMEM directionMappings_P[DIRECTION_COUNT] = {
     LED_DIRECTION_DOWN
 };
 
-#define FUNCTION_COUNT 7
-static const char PROGMEM functionCodes_P[] = { 'I', 'W', 'F', 'A', 'T', 'R', 'C' };
+#define FUNCTION_COUNT 8
+static const char PROGMEM functionCodes_P[] = { 'I', 'W', 'F', 'A', 'T', 'R', 'C', 'G' };
 
 static const uint16_t PROGMEM functionMappings_P[FUNCTION_COUNT] = {
     LED_FUNCTION_INDICATOR,
@@ -248,7 +250,8 @@ static const uint16_t PROGMEM functionMappings_P[FUNCTION_COUNT] = {
     LED_FUNCTION_ARM_STATE,
     LED_FUNCTION_THROTTLE,
     LED_FUNCTION_THRUST_RING,
-    LED_FUNCTION_COLOR
+    LED_FUNCTION_COLOR,
+    LED_FUNCTION_GPS,
 };
 
 // grid offsets
@@ -555,12 +558,12 @@ void applyLedWarningLayer(uint8_t updateNow)
         if (cellVoltage > 1 && ((cellVoltage < lowBattVolt) || (iob_battery_remaining_A < lowBattPct))) {
             warningFlags |= WARNING_FLAG_LOW_BATTERY;
         }
-        if (mavlink_active && (iob_satellites_visible < 6 || iob_hdop > 2.0f)) {
+        if (mavlink_active && iob_state >= MAV_STATE_CRITICAL) {
             warningFlags |= WARNING_FLAG_FAILSAFE;
         }
-        /*if (!ARMING_FLAG(ARMED) && !ARMING_FLAG(OK_TO_ARM)) {
+        if (mavlink_active && iob_state < MAV_STATE_STANDBY) {
             warningFlags |= WARNING_FLAG_ARMING_DISABLED;
-        }*/
+        }
     }
 
     if (warningFlags || warningFlashCounter > 0) {
@@ -601,6 +604,46 @@ void applyLedWarningLayer(uint8_t updateNow)
     }
 }
 
+#ifdef USE_LED_GPS
+#define BLINK_PAUSE_LENGTH 4
+void applyLedGpsLayer(bool updateNow)
+{
+    static uint8_t gpsFlashCounter = 0;
+    static uint8_t gpsPauseCounter = 0;
+
+    const hsvColor_t *gpsColor = &hsv_black;
+
+    if (iob_satellites_visible == 0) {
+        gpsColor = &hsv_red;
+        gpsFlashCounter = gpsPauseCounter = 0; // reset counters
+    } else {
+        if (gpsPauseCounter == 0 && (gpsFlashCounter & 1) == 0) {
+            gpsColor = iob_fix_type > 2 ? &hsv_green : &hsv_orange;
+        } else {
+            gpsColor = iob_fix_type > 2 ? &hsv_black : &hsv_red;
+        }
+    }
+
+    for (int i = 0; i < ledCount; ++i) {
+        const ledConfig_t *ledConfig = &ledConfigs[i];
+
+        if (ledConfig->flags & LED_FUNCTION_GPS) {
+            setLedHsv(i, gpsColor);
+        }
+    }
+
+    if (updateNow) {
+        if (gpsPauseCounter > 0) {
+            gpsPauseCounter--;
+        } else if ((gpsFlashCounter + 1) >= (iob_satellites_visible * 2)) {
+            gpsFlashCounter = 0;
+            gpsPauseCounter = BLINK_PAUSE_LENGTH;
+        } else
+            gpsFlashCounter++;
+    }
+}
+#endif
+
 #define INDICATOR_DEADBAND 25
 
 void applyLedIndicatorLayer(uint8_t indicatorFlashState)
@@ -608,9 +651,9 @@ void applyLedIndicatorLayer(uint8_t indicatorFlashState)
     const ledConfig_t *ledConfig;
     static const hsvColor_t *flashColor;
 
-    //if (!rxIsReceivingSignal()) {
-    //    return;
-    //}
+    if (iob_chan1 == 0 || iob_chan2 == 0 || !mavlink_active) {
+        return;
+    }
 
     if (indicatorFlashState == 0) {
         flashColor = &hsv_orange;
@@ -638,12 +681,12 @@ void applyLedIndicatorLayer(uint8_t indicatorFlashState)
             applyQuadrantColor(ledIndex, ledConfig, QUADRANT_SOUTH_WEST, flashColor);
         }
 
-        if (iob_chan2 > 1500 + INDICATOR_DEADBAND) {
+        if (iob_chan2 < 1500 - INDICATOR_DEADBAND) {
             applyQuadrantColor(ledIndex, ledConfig, QUADRANT_NORTH_EAST, flashColor);
             applyQuadrantColor(ledIndex, ledConfig, QUADRANT_NORTH_WEST, flashColor);
         }
 
-        if (iob_chan2 < 1500 - INDICATOR_DEADBAND) {
+        if (iob_chan2 > 1500 + INDICATOR_DEADBAND) {
             applyQuadrantColor(ledIndex, ledConfig, QUADRANT_SOUTH_EAST, flashColor);
             applyQuadrantColor(ledIndex, ledConfig, QUADRANT_SOUTH_WEST, flashColor);
         }
@@ -664,8 +707,7 @@ void applyLedThrottleLayer()
         }
 
         getLedHsv(ledIndex, &color);
-
-        int scaled = (iob_throttle * 1.2f) - 60;//scaleRange(rcData[THROTTLE], PWM_RANGE_MIN, PWM_RANGE_MAX, -60, +60);
+        int scaled = ((float)iob_throttle * 1.2f) - 60;
         scaled += HSV_HUE_MAX;
         color.h = (color.h + scaled) % HSV_HUE_MAX;
         setLedHsv(ledIndex, &color);
@@ -807,15 +849,21 @@ void updateLedStrip(void)
 
     bool indicatorFlashNow = (int32_t)(now - nextIndicatorFlashAt) >= 0L;
     bool warningFlashNow = (int32_t)(now - nextWarningFlashAt) >= 0L;
+#ifdef USE_LED_GPS
+    bool gpsFlashNow = (int32_t)(now - nextGpsFlashAt) >= 0L;
+#endif
     bool rotationUpdateNow = (int32_t)(now - nextRotationUpdateAt) >= 0L;
 #ifdef USE_LED_ANIMATION
     bool animationUpdateNow = (int32_t)(now - nextAnimationUpdateAt) >= 0L;
 #endif
-    if (!(indicatorFlashNow ||
-          rotationUpdateNow ||
-          warningFlashNow
+    if (!(indicatorFlashNow
+           || rotationUpdateNow
+#ifdef USE_LED_GPS
+           || gpsFlashNow
+#endif           
+           || warningFlashNow
 #ifdef USE_LED_ANIMATION
-       || animationUpdateNow
+           || animationUpdateNow
 #endif
     )) return;
 
@@ -829,11 +877,18 @@ void updateLedStrip(void)
     }
     applyLedWarningLayer(warningFlashNow);
 
+#ifdef USE_LED_GPS
+    if (gpsFlashNow) {
+        nextGpsFlashAt = now + LED_STRIP_5HZ * 2;
+    }
+    applyLedGpsLayer(gpsFlashNow);
+#endif
+
     // LAYER 3
     if (indicatorFlashNow) {
-        uint8_t rollScale = ABS(iob_chan1 - 1500) / 50;
-        uint8_t pitchScale = ABS(iob_chan2 - 1500) / 50;
-        uint8_t scale = MAX(rollScale, pitchScale);
+        uint16_t rollScale = ABS(iob_chan1 - 1500);
+        uint16_t pitchScale = ABS(iob_chan2 - 1500);
+        uint8_t scale = MAX(rollScale, pitchScale) / 100;
         nextIndicatorFlashAt = now + (LED_STRIP_5HZ / MAX(1, scale));
         if (indicatorFlashState == 0) {
             indicatorFlashState = 1;

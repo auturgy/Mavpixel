@@ -170,6 +170,8 @@ void read_mavlink(){
                 isArmedOld = 0;
               }
    
+              iob_state = mavlink_msg_heartbeat_get_system_status(&msg);
+
               lastMAVBeat = millis();
             }
             break;
@@ -232,7 +234,8 @@ void read_mavlink(){
           case MAVLINK_MSG_ID_STATUSTEXT:
             {   
 #ifdef DEBUG
-             println(mavlink_msg_statustext_get_severity(&msg));            
+             println(mavlink_msg_statustext_get_severity(&msg));
+             println((char*)(&_MAV_PAYLOAD(&msg)[1]));            //print directly from mavlink buffer            
 #endif
             }  
             break;

@@ -70,10 +70,11 @@ Derived from: jD-IOBoard_MAVlink Driver
 #define HEARTBEAT     // HeartBeat signal
 #define SOFTSER       //Use SoftwareSerial as configuration port
 //#define DEBUG         //Output extra debug information 
-//#define membug
+//#define membug        //Check memory usage
+//#define DUMPVARS      //adds CLI command to dump mavlink variables 
 #define LED_STRIP
+#define USE_LED_GPS
 #define USE_LED_ANIMATION
-#define DUMPVARS      //adds CLI command to dump mavlink variables 
 /* **********************************************/
 /* ***************** INCLUDES *******************/
 

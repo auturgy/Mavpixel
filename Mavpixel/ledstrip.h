@@ -53,6 +53,7 @@ typedef enum {
     LED_FUNCTION_THROTTLE    = (1 << 10),
     LED_FUNCTION_THRUST_RING = (1 << 11),
     LED_FUNCTION_COLOR       = (1 << 12),
+    LED_FUNCTION_GPS         = (1 << 13),
 } ledFlag_e;
 
 #define LED_DIRECTION_BIT_OFFSET 0

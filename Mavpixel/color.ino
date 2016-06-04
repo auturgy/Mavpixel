@@ -35,15 +35,15 @@ void rgbToHsv24(const CRGB* r, hsvColor_t* h)
     h->v = max;                // v, 0..255
  
     delta = max - min;                      // 0..255, < v
-    if( max != 0 ) h->s = (int)(delta)*255 / max;        // s, 0..255
+    if( max != 0 ) h->s = 255 - ((uint16_t)(delta)*255 / max);        // s, 0..255
     else {// r = g = b = 0        // s = 0, v is undefined
       h->s = 0;
       h->h = 0;
       return;
     }
-    if( r->r == max ) hue = (r->g - r->b) * 60 / delta;        // between yellow & magenta
-    else if( r->g == max ) hue = 120 + (r->b - r->r) * 60 / delta;    // between cyan & yellow
-    else hue = 240 + (r->r - r->g) * 60 / delta;    // between magenta & cyan
+    if( r->r == max ) hue = (uint16_t)(r->g - r->b) * 60 / delta;        // between yellow & magenta
+    else if( r->g == max ) hue = 120 + (uint16_t)(r->b - r->r) * 60 / delta;    // between cyan & yellow
+    else hue = 240 + (uint16_t)(r->r - r->g) * 60 / delta;    // between magenta & cyan
  
     if( hue < 0 ) hue += 360;
     h->h = hue;
