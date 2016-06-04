@@ -5,8 +5,8 @@
 // version numbering from main sketch file. This file contains only
 // a minimal header.
 //
-// Copyright (c) 2013, Jani Hirvinen, jDrones & Co.
-// All rights reserved.
+// Mavpixel Mavlink Neopixel bridge
+// (c) 2016 Nick Metcalfe
 //
 //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
 //  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED 
@@ -43,19 +43,10 @@ mavlink_system_t mavlink_system = {12,1,0,0};
 //#include "../GCS_MAVLink/include/mavlink/v0.9/ardupilotmega/mavlink.h"
 //#endif
 
-// true when we have received at least 1 MAVLink packet
-//static bool mavlink_active;
 static uint8_t crlf_count = 0;
-
-//static int packet_drops = 0;
-//static int parse_error = 0;
-
-
 
 void request_mavlink_rates()
 {
-  DPL(F("Requesting rates"));
-
   const int  maxStreams = 7;
   const uint8_t MAVStreams[maxStreams] = {MAV_DATA_STREAM_RAW_SENSORS,
 					  MAV_DATA_STREAM_EXTENDED_STATUS,
@@ -74,6 +65,64 @@ void request_mavlink_rates()
   }
 }
 
+boolean countCrLf(uint8_t c) {
+    /* allow CLI to be started by hitting enter 3 times, if no
+     heartbeat packets have been received */
+#ifndef SOFTSER
+  if (mavlink_active == 0 && cli_active == 0 && millis() < 20000) {
+#else
+  if (cli_active == 0) {
+#endif
+      if (c == '\n') {
+          crlf_count++;
+      } else if (c != '\r') {
+          crlf_count = 0;
+      }
+      if (crlf_count > 2) {
+        cli_active = true;
+        crlf_count = 0;
+        enterCommandMode();
+        cmdLen = 0;
+        cmdBuffer[0] = 0;
+        return true;
+      }
+  }
+  return false;
+}
+
+void CLIchar(uint8_t c) {
+   if (c == '\n') {
+     //got a full buffer
+     println();
+     doCommand();
+     print(F("#"));
+     cmdLen = 0;
+     cmdBuffer[0] = 0;
+   } else {
+     //Add character to buffer
+     if (cmdLen < 31) {
+       cmdBuffer[cmdLen] = c;
+       cmdBuffer[cmdLen + 1] = 0;
+       cmdLen++;
+       print((char)c);      //Echo
+     }
+   }
+}
+
+#ifdef SOFTSER
+void read_softser(){
+  while(dbSerial.available() > 0) { 
+    uint8_t c = dbSerial.read();
+    //Look for CLI on SoftSerial channel
+    if (countCrLf(c)) return;
+    if (cli_active) {
+      CLIchar(c);
+    }
+  }
+}
+#endif
+
+//Main mavlink reader
 void read_mavlink(){
   mavlink_message_t msg; 
   mavlink_status_t status;
@@ -81,58 +130,27 @@ void read_mavlink(){
   // grabing data 
   while(Serial.available() > 0) { 
     uint8_t c = Serial.read();
-//    DPN(c);
-            /* allow CLI to be started by hitting enter 3 times, if no
-           heartbeat packets have been received */
-        if (mavlink_active == 0 && cli_active == 0 && millis() < 20000) {
-            if (c == '\n') {
-                crlf_count++;
-            } else if (c != '\r') {
-                crlf_count = 0;
-            }
-            if (crlf_count > 2) {
-              cli_active = true;
-              crlf_count = 0;
-              enterCommandMode();
-              cmdLen = 0;
-              cmdBuffer[0] = 0;
-              return;
-            }
-          }
-
-    if (cli_active) {
-       if (c == '\n') {
-         //got a full buffer
-         Serial.println();
-         doCommand();
-         Serial.print(F("#"));
-         cmdLen = 0;
-         cmdBuffer[0] = 0;
-       } else {
-         //Add character to buffer
-         if (cmdLen < 31) {
-           cmdBuffer[cmdLen] = c;
-           cmdBuffer[cmdLen + 1] = 0;
-           cmdLen++;
-           Serial.print((char)c);      //Echo
-         }
-       }
-    } else {
-    
+#ifndef SOFTSER
+    //Look for CLI on mavlink channel
+    if (countCrLf(c)) return;
+    if (cli_active) CLIchar(c);
+    else {
+#endif    
       // trying to grab msg  
       if(mavlink_parse_char(MAVLINK_COMM_0, c, &msg, &status)) {
-  //       messageCounter = 0; 
          mavlink_active = 1;
-         //if(mavlink_active && LeRiPatt == 6) LeRiPatt = 0;
+         d_hbMillis = 500;
         // handle msg
   
         switch(msg.msgid) {
           case MAVLINK_MSG_ID_HEARTBEAT:
             {
-              DPL(F("MAVink HeartBeat"));
+#ifdef DEBUG
+              println(F("MAVLink HeartBeat"));
+#endif
               mavbeat = 1;
-  	    apm_mav_system    = msg.sysid;
-  	    apm_mav_component = msg.compid;
+  	      apm_mav_system    = msg.sysid;
+  	      apm_mav_component = msg.compid;
               apm_mav_type      = mavlink_msg_heartbeat_get_type(&msg);
   
               iob_mode = mavlink_msg_heartbeat_get_custom_mode(&msg);
@@ -140,17 +158,11 @@ void read_mavlink(){
                 iob_old_mode = iob_mode;
                 CheckFlightMode();
               }                
-//              iob_nav_mode = 0;
-  
-  //            if((mavlink_msg_heartbeat_get_base_mode(&msg) & MOTORS_ARMED) == MOTORS_ARMED)
+
               if(isBit(mavlink_msg_heartbeat_get_base_mode(&msg),MOTORS_ARMED)) {
                 if(isArmedOld == 0) {
                     CheckFlightMode();
                     isArmedOld = 1;
-#ifdef FRSKY                    
-                    Alti_SR.En_Alt=1;  //Wait!! Arm==1
-                    Batt_SR.Plugin_Frist=0; //Clear for backupdata data
-#endif
                 }    
                 isArmed = 1;  
               } else {
@@ -159,36 +171,11 @@ void read_mavlink(){
               }
    
               lastMAVBeat = millis();
-  //            if(waitingMAVBeats == 1){
-  //              enable_mav_request = 1;
-  //            }
-  
-  #ifdef SERDB            
-              if(debug == 2) {
-                DPN(F("MAV: "));
-                DPN((mavlink_msg_heartbeat_get_base_mode(&msg),DEC));
-                DPN(F("  Modes: "));
-                DPN(iob_mode);
-                DPN(F("  Armed: "));
-                DPN(isArmed);
-                DPN(F("  FIX: "));
-                DPN(iob_fix_type);
-                DPN(F("  Sats: "));
-                DPN(iob_satellites_visible);
-                DPN(F("  CPUVolt: "));
-                DPN(boardVoltage);
-                DPN(F("  BatVolt: "));
-                DPN(iob_vbat_A);
-                DPL(F(" "));
-              } 
-  #endif          
             }
             break;
             
           case MAVLINK_MSG_ID_SYS_STATUS:
             { 
-              
-    //          dbPRNL("MAV SYS_STATUS");
               iob_vbat_A = (mavlink_msg_sys_status_get_voltage_battery(&msg) / 1000.0f);
               iob_battery_remaining_A = mavlink_msg_sys_status_get_battery_remaining(&msg);
   
@@ -201,174 +188,52 @@ void read_mavlink(){
               }
               
               if (numCells > 0) cellVoltage = iob_vbat_A / numCells;
-
 #endif
-
-#ifdef FRSKY              
-              uint16_t tmp = mavlink_msg_sys_status_get_battery_remaining(&msg);
-              cellVvalue();
-              //---------Backup Battery Frist state--------//
-              if(Batt_SR.Plugin_Frist!=TRUE&&iob_vbat_A>9)  //Eeprom never save data && voltage !=0 && Frist plugin volatge
-              {
-                Batt_SR.Buckup_EEP=1;   //Set flag backup data to eeprom
-                Batt_SR.Plugin_Frist=TRUE;  //voltage plugin frist 
-                Batt_Volte_Backup=iob_vbat_A; 
-                //----------Set Cell Active----------
-                if(iob_vbat_A>18)
-                { 
-                   Batt_Cell_Detect=0x06;
-                }
-                else if(iob_vbat_A>15)
-                {
-                  Batt_Cell_Detect=0x05;
-                }
-                else if(iob_vbat_A>12)
-                {
-                  Batt_Cell_Detect=0x04;
-                }
-                else if(iob_vbat_A>9)
-                {
-                  Batt_Cell_Detect=0x03;
-                }   
-                Frsky_Count_Order_Batt=0;       
-              }
-              //---------Battery Backup------------------//
-  
-  //            if (tmp < 13) {
-  //              iob_battery_remaining_A = 0;
-  //            } else if (tmp < 37 ) {
-  //              iob_battery_remaining_A = 25;
-  //            } else if (tmp < 63 ) {
-  //              iob_battery_remaining_A = 50;
-  //            } else if (tmp < 88 ) {
-  //              iob_battery_remaining_A = 75;
-  //            } else {
-  //              iob_battery_remaining_A = 100;
-  //            }
-  
-              if (tmp > 0) {
-                iob_battery_remaining_A = tmp;
-              } else {
-                iob_battery_remaining_A = tmp;
-              }            
-#endif              
 
             }
             break;
             
-  #ifndef MAVLINK10 
+#ifndef MAVLINK10 
           case MAVLINK_MSG_ID_GPS_RAW:
             {
-  //         dbPRNL("MAV ID GPS");
               iob_fix_type = mavlink_msg_gps_raw_get_fix_type(&msg);
-              
-  //            dbPRN("GPS FIX: ");
-  //            dbSerial.println(iob_fix_type);
             }
             break;
           case MAVLINK_MSG_ID_GPS_STATUS:
             {
-            DPL(F("MAV ID_GPS_STATUS"));
               iob_satellites_visible = mavlink_msg_gps_status_get_satellites_visible(&msg);
             }
             break;
-  #else
+#else
           case MAVLINK_MSG_ID_GPS_RAW_INT:
             { 
-              //iob_lat = mavlink_msg_gps_raw_int_get_lat(&msg) / 10000000.0f;
-              
               iob_hdop=(mavlink_msg_gps_raw_int_get_eph(&msg)/100);
-              //iob_vdop=mavlink_msg_gps_raw_int_get_epv(&msg);
-              
-  // Patch from Simon / DIYD. Converting GPS locations to correct format            
-/*              if (iob_lat < 0) {
-                iob_lat_dir = 'S';
-                iob_lat = fabs(iob_lat);
-              } else {
-                iob_lat_dir = 'N';
-              }
-  // start of new lat code
-              deg_dat = int(iob_lat);
-              dec_deg = iob_lat - deg_dat;
-              min_dat = int(dec_deg * 60);
-              dec_min = dec_deg * 60 - min_dat;
-              sec_dat = dec_min * 60;
-              iob_lat = (deg_dat * 100) + min_dat + (sec_dat/100);
-   // end of new lat code
-   
-              iob_lon = mavlink_msg_gps_raw_int_get_lon(&msg) / 10000000.0f;
-              if (iob_lon < 0) {
-                iob_lon_dir = 'W';
-                iob_lon = fabs(iob_lon);
-              } else {
-                iob_lon_dir = 'E';
-              }
-              
-  // start of new lon code
-              deg_dat = int(iob_lon);
-              dec_deg = iob_lon - deg_dat;
-              min_dat = int(dec_deg * 60);
-              dec_min = dec_deg * 60 - min_dat;
-              sec_dat = dec_min * 60;
-              iob_lon = (deg_dat * 100) + min_dat + (sec_dat/100);
-   // end of new lon code
-*/   
-//              iob_gps_alt = mavlink_msg_gps_raw_int_get_alt(&msg) / 1000.0f;
               iob_fix_type = mavlink_msg_gps_raw_int_get_fix_type(&msg);
               iob_satellites_visible = mavlink_msg_gps_raw_int_get_satellites_visible(&msg);
             }
-            break;
-  
-  #endif          
+            break;  
+#endif          
+
           case MAVLINK_MSG_ID_RC_CHANNELS_RAW:
             {
-            //DPL("MAV ID_CHANNELS_RAW");
               iob_chan1 = mavlink_msg_rc_channels_raw_get_chan1_raw(&msg);
               iob_chan2 = mavlink_msg_rc_channels_raw_get_chan2_raw(&msg);
-              iob_chan3 = mavlink_msg_rc_channels_raw_get_chan3_raw(&msg);
-              iob_chan4 = mavlink_msg_rc_channels_raw_get_chan4_raw(&msg);
             }
             break;
   
           case MAVLINK_MSG_ID_VFR_HUD:
             {
-//              iob_groundspeed = mavlink_msg_vfr_hud_get_groundspeed(&msg);
-//              iob_heading = mavlink_msg_vfr_hud_get_heading(&msg);// * 3.60f;//0-100% of 360
               iob_throttle = mavlink_msg_vfr_hud_get_throttle(&msg);
               if(iob_throttle > 100 && iob_throttle < 150) iob_throttle = 100; //Temporary fix for ArduPlane 2.28
               if(iob_throttle < 0 || iob_throttle > 150) iob_throttle = 0; //Temporary fix for ArduPlane 2.28
-//              iob_alt = mavlink_msg_vfr_hud_get_alt(&msg);
             }
             break;
             
-          case MAVLINK_MSG_ID_SCALED_PRESSURE:
-            {
-//              iob_temperature = mavlink_msg_scaled_pressure_get_temperature(&msg) / 100;  // scaling 0.01
-            }
-            break;
-  
-/*          case MAVLINK_MSG_ID_ATTITUDE:
-            {
-  //          DPL("MAV ID_ATTITUDE");
-              iob_pitch = ToDeg(mavlink_msg_attitude_get_pitch(&msg));
-              iob_roll = ToDeg(mavlink_msg_attitude_get_roll(&msg));
-              iob_yaw = ToDeg(mavlink_msg_attitude_get_yaw(&msg));
-            }
-            break;
-*/          case MAVLINK_MSG_ID_HWSTATUS:  
-            {
-              // Read our HW-Status
-              boardVoltage = mavlink_msg_hwstatus_get_Vcc(&msg) / 1000.0f;      
-              i2cErrorCount = mavlink_msg_hwstatus_get_I2Cerr(&msg);
-              //DPL(boardVoltage);
-             if(boardVoltage != 0 && boardVoltage < 4.0) {
-                voltAlarm = 1;
-             } else voltAlarm = 0;
-            }
-            break;
           case MAVLINK_MSG_ID_STATUSTEXT:
             {   
-             DPL(mavlink_msg_statustext_get_severity(&msg));            
+#ifdef DEBUG
+             println(mavlink_msg_statustext_get_severity(&msg));            
+#endif
             }  
             break;
           default:
@@ -376,33 +241,11 @@ void read_mavlink(){
             break;
         }
       }
+#ifndef SOFTSER
     }
+#endif    
     delayMicroseconds(138);
     //next one
   }
-  // Update global packet drops counter
-  //packet_drops += status.packet_rx_drop_count;
-  //parse_error += status.parse_error;
-
 }
-
-#ifdef FRSKY
-void cellVvalue() {
-  int i;
-  //no 3S temporary fix 
-  int val = (int)(2100.0*(iob_vbat_A/(float(cell_numb)))/4.2);
-
-  //no 3S temporary fix
-  if ((val > 2100) && (cell_numb < MAXCELL)) {
-    cell_numb++;
-    return;
-  }
-    
-  for (i=0;i<cell_numb;i++) {
-    cellV[i]=val;
-  }
-}
-#endif
-
-
 

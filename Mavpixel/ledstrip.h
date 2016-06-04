@@ -1,18 +1,20 @@
 /*
+ * Mavpixel Mavlink Neopixel bridge
+ * (c) 2016 Nick Metcalfe
  * This file is derived from Cleanflight.
  *
- * Cleanflight is free software: you can redistribute it and/or modify
+ * Mavpixel is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * Cleanflight is distributed in the hope that it will be useful,
+ * Mavpixel is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Cleanflight.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Mavpixel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #pragma once
@@ -81,18 +83,6 @@ typedef enum {
 
 #define MCI_COMPONENT_COUNT (MCI_INDEX + 1)
 
-/*
-typedef struct modeColorIndexes_s {
-    uint8_t north;
-    uint8_t east;
-    uint8_t south;
-    uint8_t west;
-    uint8_t up;
-    uint8_t down;
-    uint8_t operator[](uint8_t i) const {return *((&north) + i);}
-    uint8_t &operator[](uint8_t i) {return *((&north) + i);}
-} modeColorIndexes_t;
-*/
 #define MCI_NORTH 0
 #define MCI_EAST 1
 #define MCI_SOUTH 2
@@ -119,9 +109,6 @@ extern uint8_t ledCount;
 extern uint8_t ledsInRingCount;
 extern ledConfig_t ledConfigs[MAX_LED_STRIP_LENGTH];
 extern hsvColor_t* colors[CONFIGURABLE_COLOR_COUNT];
-
-//PG_DECLARE_ARR(ledConfig_t, MAX_LED_STRIP_LENGTH, ledConfigs);
-//PG_DECLARE_ARR(hsvColor_t, CONFIGURABLE_COLOR_COUNT, colors);
 
 void ledStripInit(void);
 

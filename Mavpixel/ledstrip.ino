@@ -1,18 +1,20 @@
 /*
+ * Mavpixel Mavlink Neopixel bridge
+ * (c) 2016 Nick Metcalfe
  * This file is derived from Cleanflight.
  *
- * Cleanflight is free software: you can redistribute it and/or modify
+ * Mavpixel is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * Cleanflight is distributed in the hope that it will be useful,
+ * Mavpixel is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Cleanflight.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Mavpixel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #include <stdbool.h>
@@ -23,48 +25,7 @@
 
 #include <platform.h>
 
-//#include <build_config.h>
-
 #ifdef LED_STRIP
-
-//#include "color.h"
-//#include "maths.h"
-//#include <common/typeconversion.h>
-//#include <common/printf.h>
-//#include <common/axis.h>
-//#include <common/utils.h>
-
-//#include "config/parameter_group.h"
-//#include "config/parameter_group_ids.h"
-
-//#include "drivers/light_ws2811strip.h"
-//#include "drivers/system.h"
-//#include "drivers/serial.h"
-
-//#include "flight/pid.h"
-//#include "flight/failsafe.h"
-
-//#include "io/rc_controls.h"
-
-//#include "sensors/battery.h"
-
-//#include "io/ledstrip.h"
-
-//#include "config/runtime_config.h"
-//#include "config/config.h"
-//#include "config/feature.h"
-
-//PG_REGISTER_ARR_WITH_RESET_FN(ledConfig_t, MAX_LED_STRIP_LENGTH, ledConfigs, PG_LED_STRIP_CONFIG, 0);
-//PG_REGISTER_ARR_WITH_RESET_FN(hsvColor_t, CONFIGURABLE_COLOR_COUNT, colors, PG_COLOR_CONFIG, 0);
-
-
-static bool ledStripInitialised = false;
-static bool ledStripEnabled = true;
-
-static void ledStripDisable(void);
-
-//#define USE_LED_ANIMATION
-//#define USE_LED_RING_DEFAULT_CONFIG
 
 // timers
 #ifdef USE_LED_ANIMATION
@@ -78,10 +39,6 @@ static uint32_t nextRotationUpdateAt = 0;
 #define LED_STRIP_20HZ (1000 / 20)
 #define LED_STRIP_10HZ (1000 / 10)
 #define LED_STRIP_5HZ (1000 / 5)
-
-//#if MAX_LED_STRIP_LENGTH > WS2811_LED_STRIP_LENGTH
-//#error "Led strip length must match driver"
-//#endif
 
 //                          H    S    V
 #define LED_BLACK        {  0,   0,   0}
@@ -116,7 +73,6 @@ hsvColor_t hsv_deepPink    = LED_DEEP_PINK;
 
 #define LED_DIRECTION_COUNT 6
 
-//const hsvColor_t * const defaultColors[] = {
 hsvColor_t* colors[] = {
         &hsv_black,
         &hsv_white,
@@ -164,12 +120,7 @@ typedef enum {
 
 
 // Note, the color index used for the mode colors below refer to the default colors.
-// if the colors are reconfigured the index is still valid but the displayed color might
-// be different.
-// See colors[] and defaultColors[] and applyDefaultColors[]
-
-//Single array for efficiency now there are many more modes
-static const uint8_t PROGMEM ModeColors[] = {
+static const uint8_t PROGMEM ModeColors_P[] = {
 //Stabilize  
   COLOR_GREEN, COLOR_DARK_VIOLET, COLOR_GREEN, COLOR_DEEP_PINK, COLOR_BLUE, COLOR_ORANGE,
 //Acro
@@ -214,9 +165,10 @@ static const uint8_t PROGMEM ModeColors[] = {
   COLOR_DARK_VIOLET, COLOR_DARK_VIOLET, COLOR_RED, COLOR_DEEP_PINK, COLOR_BLUE, COLOR_ORANGE,
 };  
 
+//Mode colors are used from EEPROM to save memory
 void writeModeColorsDefault() {
-  const uint8_t* p = &ModeColors[0];
-  for (int i = 0; i < sizeof(ModeColors); i++)
+  const uint8_t* p = &ModeColors_P[0];
+  for (int i = 0; i < sizeof(ModeColors_P); i++)
       EEPROM.write(MODE_CONFIGS + i, pgm_read_byte(p + i));
 }
 
@@ -225,23 +177,7 @@ uint8_t ledGridHeight;
 uint8_t ledCount;
 uint8_t ledsInRingCount;
 
-#ifdef USE_LED_RING_DEFAULT_CONFIG
-const ledConfig_t defaultLedStripConfig[] = {
-    { CALCULATE_LED_XY( 2,  2), 3, LED_FUNCTION_THRUST_RING},
-    { CALCULATE_LED_XY( 2,  1), 3, LED_FUNCTION_THRUST_RING},
-    { CALCULATE_LED_XY( 2,  0), 3, LED_FUNCTION_THRUST_RING},
-    { CALCULATE_LED_XY( 1,  0), 3, LED_FUNCTION_THRUST_RING},
-    { CALCULATE_LED_XY( 0,  0), 3, LED_FUNCTION_THRUST_RING},
-    { CALCULATE_LED_XY( 0,  1), 3, LED_FUNCTION_THRUST_RING},
-    { CALCULATE_LED_XY( 0,  2), 3, LED_FUNCTION_THRUST_RING},
-    { CALCULATE_LED_XY( 1,  2), 3, LED_FUNCTION_THRUST_RING},
-    { CALCULATE_LED_XY( 1,  1), 3, LED_FUNCTION_THRUST_RING},
-    { CALCULATE_LED_XY( 1,  1), 3, LED_FUNCTION_THRUST_RING},
-    { CALCULATE_LED_XY( 1,  1), 3, LED_FUNCTION_THRUST_RING},
-    { CALCULATE_LED_XY( 1,  1), 3, LED_FUNCTION_THRUST_RING},
-};
-#else
-//const ledConfig_t defaultLedStripConfig[] = {
+//Default LED strip config
 ledConfig_t ledConfigs[MAX_LED_STRIP_LENGTH] = {
     { CALCULATE_LED_XY(15, 15), 0, LED_DIRECTION_SOUTH | LED_DIRECTION_EAST | LED_FUNCTION_INDICATOR | LED_FUNCTION_ARM_STATE },
     { CALCULATE_LED_XY(15,  8), 0, LED_DIRECTION_EAST | LED_FUNCTION_FLIGHT_MODE | LED_FUNCTION_WARNING },
@@ -276,30 +212,6 @@ ledConfig_t ledConfigs[MAX_LED_STRIP_LENGTH] = {
     { CALCULATE_LED_XY( 0,  0), 0, 0},
     { CALCULATE_LED_XY( 0,  0), 0, 0}
 };
-#endif
-
-
-//void pgResetFn_ledConfigs(ledConfig_t *instance)
-//{
-//    memcpy(instance, &defaultLedStripConfig, sizeof(defaultLedStripConfig));
-//}
-
-//void pgResetFn_colors(hsvColor_t *instance)
-//{
-//    for (uint8_t colorIndex = 0; colorIndex < ARRAYLEN(defaultColors); colorIndex++) {
-//        *instance++ = *defaultColors[colorIndex];
-//    }
-//}
-
-/*
- * 6 coords @nn,nn
- * 4 direction @##
- * 6 modes @####
- * = 16 bytes per led
- * 16 * 32 leds = 512 bytes storage needed worst case.
- * = not efficient to store led configs as strings in flash.
- * = becomes a problem to send all the data via cli due to serial/cli buffers
- */
 
 typedef enum {
     X_COORDINATE,
@@ -309,13 +221,15 @@ typedef enum {
     RING_COLORS
 } parseState_e;
 
+//Keep parsing tables in PROGMEM
+
 #define PARSE_STATE_COUNT 5
+static const char PROGMEM chunkSeparators_P[PARSE_STATE_COUNT] = {',', ':', ':',':', '\0' };
 
-static const char chunkSeparators[PARSE_STATE_COUNT] = {',', ':', ':',':', '\0' };
+#define DIRECTION_COUNT 6
+static const char PROGMEM directionCodes_P[] = { 'N', 'E', 'S', 'W', 'U', 'D' };
 
-static const char directionCodes[] = { 'N', 'E', 'S', 'W', 'U', 'D' };
-#define DIRECTION_COUNT 6//(sizeof(directionCodes) / sizeof(directionCodes[0]))
-static const uint16_t directionMappings[DIRECTION_COUNT] = {
+static const uint16_t PROGMEM directionMappings_P[DIRECTION_COUNT] = {
     LED_DIRECTION_NORTH,
     LED_DIRECTION_EAST,
     LED_DIRECTION_SOUTH,
@@ -324,16 +238,17 @@ static const uint16_t directionMappings[DIRECTION_COUNT] = {
     LED_DIRECTION_DOWN
 };
 
-static const char functionCodes[] = { 'I', 'W', 'F', 'A', 'T', 'R', 'C' };
-#define FUNCTION_COUNT 7//(sizeof(functionCodes) / sizeof(functionCodes[0]))
-static const uint16_t functionMappings[FUNCTION_COUNT] = {
+#define FUNCTION_COUNT 7
+static const char PROGMEM functionCodes_P[] = { 'I', 'W', 'F', 'A', 'T', 'R', 'C' };
+
+static const uint16_t PROGMEM functionMappings_P[FUNCTION_COUNT] = {
     LED_FUNCTION_INDICATOR,
     LED_FUNCTION_WARNING,
     LED_FUNCTION_FLIGHT_MODE,
     LED_FUNCTION_ARM_STATE,
     LED_FUNCTION_THROTTLE,
-	LED_FUNCTION_THRUST_RING,
-	LED_FUNCTION_COLOR
+    LED_FUNCTION_THRUST_RING,
+    LED_FUNCTION_COLOR
 };
 
 // grid offsets
@@ -430,7 +345,7 @@ bool parseLedStripConfig(uint8_t ledIndex, const char *config)
 
     while (ok) {
 
-        char chunkSeparator = chunkSeparators[parseState];
+        char chunkSeparator = pgm_read_byte(chunkSeparators_P + parseState);
 
         memset(&chunk, 0, sizeof(chunk));
         chunkIndex = 0;
@@ -456,8 +371,8 @@ bool parseLedStripConfig(uint8_t ledIndex, const char *config)
             case DIRECTIONS:
                 for (chunkIndex = 0; chunk[chunkIndex] && chunkIndex < CHUNK_BUFFER_SIZE; chunkIndex++) {
                     for (uint8_t mappingIndex = 0; mappingIndex < DIRECTION_COUNT; mappingIndex++) {
-                        if (directionCodes[mappingIndex] == chunk[chunkIndex]) {
-                            ledConfig->flags |= directionMappings[mappingIndex];
+                        if (pgm_read_byte(directionCodes_P + mappingIndex) == chunk[chunkIndex]) {
+                            ledConfig->flags |= pgm_read_word(directionMappings_P + mappingIndex);
                             break;
                         }
                     }
@@ -466,8 +381,8 @@ bool parseLedStripConfig(uint8_t ledIndex, const char *config)
             case FUNCTIONS:
                 for (chunkIndex = 0; chunk[chunkIndex] && chunkIndex < CHUNK_BUFFER_SIZE; chunkIndex++) {
                     for (uint8_t mappingIndex = 0; mappingIndex < FUNCTION_COUNT; mappingIndex++) {
-                        if (functionCodes[mappingIndex] == chunk[chunkIndex]) {
-                            ledConfig->flags |= functionMappings[mappingIndex];
+                        if (pgm_read_byte(functionCodes_P + mappingIndex) == chunk[chunkIndex]) {
+                            ledConfig->flags |= pgm_read_word(functionMappings_P + mappingIndex);
                             break;
                         }
                     }
@@ -501,30 +416,30 @@ bool parseLedStripConfig(uint8_t ledIndex, const char *config)
 
 void printLedConfig(uint8_t ledIndex)
 {
-    uint8_t index;
     uint8_t mappingIndex;
+    char code;
 
     ledConfig_t *ledConfig = &ledConfigs[ledIndex];
 
-    Serial.print(GET_LED_X(ledConfig));
-    Serial.print(",");
-    Serial.print(GET_LED_Y(ledConfig));    
-    Serial.print(":");
+    print(GET_LED_X(ledConfig));
+    print(",");
+    print(GET_LED_Y(ledConfig));    
+    print(":");
     
-    for (mappingIndex = 0, index = 0; mappingIndex < DIRECTION_COUNT; mappingIndex++) {
-        if (ledConfig->flags & directionMappings[mappingIndex]) {
-            Serial.print(directionCodes[mappingIndex]);
+    for (mappingIndex = 0; mappingIndex < DIRECTION_COUNT; mappingIndex++) {
+        if (ledConfig->flags & pgm_read_word(directionMappings_P + mappingIndex)) {
+          print((char)(pgm_read_byte(directionCodes_P + mappingIndex)));
         }
     }
-    Serial.print(":");
+    print(":");
 
-    for (mappingIndex = 0, index = 0; mappingIndex < FUNCTION_COUNT; mappingIndex++) {
-        if (ledConfig->flags & functionMappings[mappingIndex]) {
-            Serial.print(functionCodes[mappingIndex]);
+    for (mappingIndex = 0; mappingIndex < FUNCTION_COUNT; mappingIndex++) {
+        if (ledConfig->flags & pgm_read_word(functionMappings_P + mappingIndex)) {
+          print((char)(pgm_read_byte(functionCodes_P + mappingIndex)));
         }
     }
-    Serial.print(":");
-    Serial.print(ledConfig->color);
+    print(":");
+    print(ledConfig->color);
 }
 
 
@@ -640,10 +555,10 @@ void applyLedWarningLayer(uint8_t updateNow)
         if (cellVoltage > 1 && ((cellVoltage < lowBattVolt) || (iob_battery_remaining_A < lowBattPct))) {
             warningFlags |= WARNING_FLAG_LOW_BATTERY;
         }
-        /*if (feature(FEATURE_FAILSAFE) && failsafeIsActive()) {
+        if (mavlink_active && (iob_satellites_visible < 6 || iob_hdop > 2.0f)) {
             warningFlags |= WARNING_FLAG_FAILSAFE;
         }
-        if (!ARMING_FLAG(ARMED) && !ARMING_FLAG(OK_TO_ARM)) {
+        /*if (!ARMING_FLAG(ARMED) && !ARMING_FLAG(OK_TO_ARM)) {
             warningFlags |= WARNING_FLAG_ARMING_DISABLED;
         }*/
     }
@@ -859,7 +774,7 @@ static void applyLedAnimationLayer(void)
 {
     const ledConfig_t *ledConfig;
 
-    if (isArmed) {
+    if (isArmed || !stripAnim) {
         return;
     }
 
@@ -886,24 +801,7 @@ static void applyLedAnimationLayer(void)
 
 void updateLedStrip(void)
 {
-
-	if (!(ledStripInitialised)) {// && isWS2811LedStripReady())) {
-        return;
-    }
-
-    if (false) {//IS_RC_MODE_ACTIVE(BOXLEDLOW)) {
-        if (ledStripEnabled) {
-            ledStripDisable();
-            ledStripEnabled = false;
-        }
-    } else {
-        ledStripEnabled = true;
-    }
-    
-    if (!ledStripEnabled){
-        return;
-    }
-    
+    static uint8_t indicatorFlashState = 0;
 
     uint32_t now = millis();
 
@@ -913,66 +811,57 @@ void updateLedStrip(void)
 #ifdef USE_LED_ANIMATION
     bool animationUpdateNow = (int32_t)(now - nextAnimationUpdateAt) >= 0L;
 #endif
-    if (!(
-            indicatorFlashNow ||
-            rotationUpdateNow ||
-            warningFlashNow
+    if (!(indicatorFlashNow ||
+          rotationUpdateNow ||
+          warningFlashNow
 #ifdef USE_LED_ANIMATION
-            || animationUpdateNow
+       || animationUpdateNow
 #endif
-    )) {
-        return;
-    }
+    )) return;
 
-    static uint8_t indicatorFlashState = 0;
     // LAYER 1
     applyLedModeLayer();
     applyLedThrottleLayer();
-    // LAYER 2
 
+    // LAYER 2
     if (warningFlashNow) {
         nextWarningFlashAt = now + LED_STRIP_10HZ;
     }
     applyLedWarningLayer(warningFlashNow);
 
     // LAYER 3
-
     if (indicatorFlashNow) {
-
         uint8_t rollScale = ABS(iob_chan1 - 1500) / 50;
         uint8_t pitchScale = ABS(iob_chan2 - 1500) / 50;
         uint8_t scale = MAX(rollScale, pitchScale);
         nextIndicatorFlashAt = now + (LED_STRIP_5HZ / MAX(1, scale));
-
         if (indicatorFlashState == 0) {
             indicatorFlashState = 1;
         } else {
             indicatorFlashState = 0;
         }
     }
-
     applyLedIndicatorLayer(indicatorFlashState);
 
 #ifdef USE_LED_ANIMATION
+    //LAYER 4
     if (animationUpdateNow) {
         nextAnimationUpdateAt = now + LED_STRIP_10HZ;
         updateLedAnimationState();
     }
     applyLedAnimationLayer();
 #endif
-
+    //LAYER 5
     if (rotationUpdateNow) {
-
-        applyLedThrustRingLayer();
-
         uint8_t animationSpeedScale = 1;
-
+        applyLedThrustRingLayer();
         if (isArmed) {
-            animationSpeedScale = iob_throttle / 10; //scaleRange(rcData[THROTTLE], PWM_RANGE_MIN, PWM_RANGE_MAX, 1, 10);
+            animationSpeedScale = iob_throttle / 10;
         }
-
         nextRotationUpdateAt = now + LED_STRIP_5HZ/animationSpeedScale;
     }
+
+    //All layers applied, send it to strip
     show();
 }
 
@@ -993,7 +882,6 @@ bool parseColor(uint8_t index, const char *colorConfig)
                 if (val > HSV_HUE_MAX) {
                     ok = false;
                     continue;
-
                 }
                 colors[index]->h = val;
                 break;
@@ -1032,11 +920,11 @@ bool parseColor(uint8_t index, const char *colorConfig)
 void printColorConfig(uint8_t index)
 {
     hsvColor_t *color = colors[index];
-    Serial.print(colors[index]->h);
-    Serial.print(",");
-    Serial.print(colors[index]->s);
-    Serial.print(",");
-    Serial.print(colors[index]->v);
+    print(colors[index]->h);
+    print(",");
+    print(colors[index]->s);
+    print(",");
+    print(colors[index]->v);
 }
 
 bool parseMode(const char *modeConfig)
@@ -1069,30 +957,18 @@ bool parseMode(const char *modeConfig)
 
 void printModeConfig(uint8_t mode)
 {
-    Serial.print(readModeColor(mode, 0));
+    print(readModeColor(mode, 0));
     for (int i = 1; i <= MODE_COLOR_INDEX_MAX; i++) {
-      Serial.print(",");
-      Serial.print(readModeColor(mode, i));
+      print(",");
+      print(readModeColor(mode, i));
     }
 }
 
 void ledStripInit(void)
 {
-    ledStripInitialised = false;
     //Led driver init
     ledSetup();
-}
-
-void ledStripEnable(void)
-{
     reevalulateLedConfig();
-    ledStripInitialised = true;
 }
 
-static void ledStripDisable(void)
-{
-//	setStripColor(&hsv_black);
-    
-//	ws2811UpdateStrip();
-}
 #endif
