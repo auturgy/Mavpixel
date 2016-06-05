@@ -29,6 +29,12 @@ void changeBaudRate(uint32_t newBaud) {
   while(Serial.available()) Serial.read();
 }
 
+void changeSoftRate(uint32_t newBaud) {
+  dbSerial.flush();
+  dbSerial.begin(newBaud);
+  while(dbSerial.available()) dbSerial.read();
+}
+
 #ifdef HEARTBEAT
 void HeartBeat() {
   c_hbMillis = millis();

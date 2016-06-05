@@ -91,6 +91,7 @@ void writeFactorySettings() {
  writeEP16(LOWBATT_VOLT, 3300); // v*1000
  writeEEPROM(STRIP_BRIGHT, 255);
  writeEEPROM(STRIP_ANIM, 0);
+ writeEP16(SOFTSER_BAUD, 3840);  // b/10
 
  // Write details for versioncheck to EEPROM
  writeEEPROM(CHK1, 22);

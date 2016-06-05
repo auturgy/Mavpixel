@@ -26,6 +26,7 @@ const char PROGMEM cmd_quit_P[] = "quit";
 const char PROGMEM cmd_led_P[] = "led";
 const char PROGMEM cmd_color_P[] = "color";
 const char PROGMEM cmd_baud_P[] = "baud";
+const char PROGMEM cmd_soft_P[] = "softbaud";
 const char PROGMEM cmd_free_P[] = "free";
 const char PROGMEM cmd_vars_P[] = "vars";
 const char PROGMEM cmd_mode_P[] = "mode_color";
@@ -246,6 +247,28 @@ void doCommand() {
       return;
     }
 
+    //(softbaud) Configure SoftwareSerial baud rate
+    if (strncmp_P(cmdBuffer, cmd_baud_P, got) == 0) {
+      if (arg) {
+#ifdef SOFTSER
+        uint32_t val = atol(arg);
+        if (val > 0) {
+          if (val > 38400) val = 38400;      //maximum speed softser can handle
+          writeEP16(SOFTSER_BAUD, val / 10);
+          changeSoftRate(val);
+        }
+#endif
+      } else {
+        print(F("Soft: "));
+#ifdef SOFTSER
+        println((uint32_t)readEP16(SOFTSER_BAUD) * 10);
+#else
+        println(0);
+#endif
+      }
+      return;
+    }
+
 #ifdef DUMPVARS
     //(vars) Variables info.
     if (strncmp_P(cmdBuffer, cmd_vars_P, got) == 0) {
@@ -278,6 +301,7 @@ void doCommand() {
 #endif
 #endif
       "baud      \tSet serial baud rate\r\n" 
+      "softbaud  \tSet software serial baud rate\r\n" 
       "factory   \tFactory reset\r\n"
 #ifdef DUMPVARS
       "vars      \tDump variables\r\n" 

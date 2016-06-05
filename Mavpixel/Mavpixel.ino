@@ -174,7 +174,7 @@ void setup()
 
 #ifdef SOFTSER
   // Our software serial is connected on pins D11 and D12
-  dbSerial.begin(38400);                    // We don't want to too fast
+  dbSerial.begin((uint32_t)readEP16(SOFTSER_BAUD) * 10);                    // We don't want to too fast
 #endif
 
   println(F("Mavpixel " VER " initialised."));
