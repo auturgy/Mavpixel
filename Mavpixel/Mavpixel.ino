@@ -74,7 +74,7 @@ Derived from: jD-IOBoard_MAVlink Driver
 //#define DUMPVARS      //adds CLI command to dump mavlink variables 
 #define LED_STRIP
 #define USE_LED_GPS
-#define USE_LED_ANIMATION
+//#define USE_LED_ANIMATION
 /* **********************************************/
 /* ***************** INCLUDES *******************/
 
@@ -183,8 +183,6 @@ void setup()
   mavlink_comm_0_port = &Serial;
 
 #ifdef LED_STRIP
-  //Start the strip
-  ledStripInit();
   // Read led strip configs from EEPROM
   lowBattPct = readEEPROM(LOWBATT_PCT);
   lowBattVolt = readEP16(LOWBATT_VOLT) / 1000.0f;
@@ -192,6 +190,8 @@ void setup()
   stripAnim = readEEPROM(STRIP_ANIM);
   readStruct(LED_CONFIGS, (uint8_t*)ledConfigs, sizeof(ledConfigs));  
   readStruct(COLOR_CONFIGS, (uint8_t*)colors, sizeof(colors));
+  //Start the strip
+  ledStripInit();
   setBrightness(stripBright);  
 #endif
 

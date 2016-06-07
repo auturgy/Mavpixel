@@ -248,7 +248,7 @@ void doCommand() {
     }
 
     //(softbaud) Configure SoftwareSerial baud rate
-    if (strncmp_P(cmdBuffer, cmd_baud_P, got) == 0) {
+    if (strncmp_P(cmdBuffer, cmd_soft_P, got) == 0) {
       if (arg) {
 #ifdef SOFTSER
         uint32_t val = atol(arg);

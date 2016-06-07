@@ -316,7 +316,7 @@ void updateLedCount(void)
     }
 }
 
-void reevalulateLedConfig(void)
+void reevaluateLedConfig(void)
 {
     updateLedCount();
     determineLedStripDimensions();
@@ -412,7 +412,7 @@ bool parseLedStripConfig(uint8_t ledIndex, const char *config)
         memset(ledConfig, 0, sizeof(ledConfig_t));
     } else if (!ledConfig->flags) setLedHsv(ledIndex, &hsv_black);
 
-    reevalulateLedConfig();
+    reevaluateLedConfig();
 
     return ok;
 }
@@ -1023,7 +1023,7 @@ void ledStripInit(void)
 {
     //Led driver init
     ledSetup();
-    reevalulateLedConfig();
+    reevaluateLedConfig();
 }
 
 #endif
