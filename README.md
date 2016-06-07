@@ -1,6 +1,15 @@
-jD-IOBoard
-==========
-jDrones IOBoard firmware repository
+Mavpixel
+========
+Mavpixel brings Cleanflight-style LED strip functionality to the APM project.
+
+A recent version of the LED strip driver source code was taken from Cleanflight and adapted to run on an Arduino.
+
+The Mavlink interpreter demo from the jD-IOBoard LED controller was combined with the Cleanflight LED driver to allow the strip to be controlled over a Mavlink serial connection.
+
+This project is pre-alpha and is currently still in development.
+
+
+
 
 What is jD-IOBoard??
 
