@@ -32,6 +32,7 @@
 #define FACTORY_RESET 141
 #define STRIP_ANIM    142
 #define SOFTSER_BAUD  143  //16 bit
+#define MIN_SATS      145
 
 // Internal version, check placeholders
 #define CHK1 252

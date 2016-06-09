@@ -618,7 +618,7 @@ void applyLedGpsLayer(bool updateNow)
         gpsFlashCounter = gpsPauseCounter = 0; // reset counters
     } else {
         if (gpsPauseCounter == 0 && (gpsFlashCounter & 1) == 0) {
-            gpsColor = iob_fix_type > 2 ? &hsv_green : &hsv_orange;
+            gpsColor = iob_satellites_visible > minSats ? &hsv_green : &hsv_orange;
         } else {
             gpsColor = iob_fix_type > 2 ? &hsv_black : &hsv_red;
         }

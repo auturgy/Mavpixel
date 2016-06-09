@@ -188,6 +188,7 @@ void setup()
   lowBattVolt = readEP16(LOWBATT_VOLT) / 1000.0f;
   stripBright = readEEPROM(STRIP_BRIGHT);
   stripAnim = readEEPROM(STRIP_ANIM);
+  minSats = readEEPROM(MIN_SATS);
   readStruct(LED_CONFIGS, (uint8_t*)ledConfigs, sizeof(ledConfigs));
   readColorConfigs();
   //Start the strip
