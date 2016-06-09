@@ -450,19 +450,19 @@ void applyDirectionalModeColor(const uint8_t ledIndex, const ledConfig_t *ledCon
 {
 
     // override with n/e/s/w colors to each n/s e/w half - bail at first match.
-    if ((ledConfig->flags & LED_DIRECTION_SOUTH) && GET_LED_Y(ledConfig) >= lowestYValueForSouth) {
+    if ((ledConfig->flags & LED_DIRECTION_SOUTH)){// && GET_LED_Y(ledConfig) >= lowestYValueForSouth) {
         setLedHsv(ledIndex, colors[readModeColor(mode, MCI_SOUTH)]);
     }
 
-    else if ((ledConfig->flags & LED_DIRECTION_NORTH) && GET_LED_Y(ledConfig) <= highestYValueForNorth) {
+    else if ((ledConfig->flags & LED_DIRECTION_NORTH)){// && GET_LED_Y(ledConfig) <= highestYValueForNorth) {
         setLedHsv(ledIndex, colors[readModeColor(mode, MCI_NORTH)]);
     }
 
-    else if ((ledConfig->flags & LED_DIRECTION_EAST) && GET_LED_X(ledConfig) >= lowestXValueForEast) {
+    else if ((ledConfig->flags & LED_DIRECTION_EAST)){// && GET_LED_X(ledConfig) >= lowestXValueForEast) {
         setLedHsv(ledIndex, colors[readModeColor(mode, MCI_EAST)]);
     }
 
-    else if ((ledConfig->flags & LED_DIRECTION_WEST) && GET_LED_X(ledConfig) <= highestXValueForWest) {
+    else if ((ledConfig->flags & LED_DIRECTION_WEST)){// && GET_LED_X(ledConfig) <= highestXValueForWest) {
         setLedHsv(ledIndex, colors[readModeColor(mode, MCI_WEST)]);
     }
 

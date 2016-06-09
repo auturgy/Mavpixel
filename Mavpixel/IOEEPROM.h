@@ -38,9 +38,9 @@
 #define CHK2 253
 #define VERS 254
 
-#define LED_CONFIGS 256  //128 bytes
-#define COLOR_CONFIGS 384 //32 bytes
-#define MODE_CONFIGS 416 //126 bytes
+#define LED_CONFIGS 256  //128 bytes (32 * ledConfig_t)
+#define COLOR_CONFIGS 384 //64 bytes (16 * hsvColor_t)
+#define MODE_CONFIGS 448 //126 bytes (21 modes * 6 colour indexes)
 
 #define EEPROM_MAX_ADDR 1023 // This is maximum for atmel 328 chip
 

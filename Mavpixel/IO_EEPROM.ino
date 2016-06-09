@@ -64,6 +64,26 @@ void writeStruct(int address, uint8_t* pointer, uint16_t size) {
   }
 }
 
+//Write led to ledConfigs data
+void writeLedConfig(uint8_t index, ledConfig_t *led) {
+  int loc = LED_CONFIGS + (index * 4);
+  writeStruct(loc, (uint8_t*)led, 4);
+}
+
+//Read all colours data
+void readColorConfigs() {
+  for (int index = 0; index < 16; index++) {
+    int loc = COLOR_CONFIGS + (index * 4);
+    readStruct(loc, (uint8_t*)(colors[index]), 4);
+  }
+}
+
+//Write color to colors data
+void writeColorConfig(uint8_t index, hsvColor_t *color) {
+  int loc = COLOR_CONFIGS + (index * 4);
+  writeStruct(loc, (uint8_t*)color, 4);
+}
+
 //Read byte from modeColor data
 uint8_t readModeColor(uint8_t mode, uint8_t index) {
   int loc = MODE_CONFIGS + (mode * 6) + index;
@@ -82,7 +102,8 @@ void writeFactorySettings() {
  
 #ifdef LED_STRIP
   writeStruct(LED_CONFIGS, (uint8_t*)ledConfigs, sizeof(ledConfigs));  
-  writeStruct(COLOR_CONFIGS, (uint8_t*)colors, sizeof(colors));
+  for (int index = 0; index < 16; index++)
+    writeColorConfig(index, colors[index]);
   writeModeColorsDefault();
 #endif
 

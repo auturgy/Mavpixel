@@ -126,9 +126,9 @@ void doCommand() {
           got = arg - cmdBuffer; //length of first word
           cp += 1; //ptr to argument
           if (checkParse(parseLedStripConfig(i, cp)))
-            writeStruct(LED_CONFIGS, (uint8_t*)ledConfigs, sizeof(ledConfigs));  
+            writeLedConfig(i, &ledConfigs[i]);
         } else printLed(i);
-      } else for (int i = 0; i < 32; i++) printLed(i);
+      } else for (int i = 0; i < ledCount; i++) printLed(i);
       return;
     }
 
@@ -143,7 +143,7 @@ void doCommand() {
           got = arg - cmdBuffer; //length of first word
           cp += 1; //ptr to argument
           if (checkParse(parseColor(i, cp)))
-            writeStruct(COLOR_CONFIGS, (uint8_t*)colors, sizeof(colors));  
+            writeColorConfig(i, colors[i]);
         } else printColor(i);
       } else for (int i = 0; i < 16; i++) printColor(i);
       return;
