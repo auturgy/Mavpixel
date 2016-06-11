@@ -618,7 +618,7 @@ void applyLedGpsLayer(bool updateNow)
         gpsFlashCounter = gpsPauseCounter = 0; // reset counters
     } else {
         if (gpsPauseCounter == 0 && (gpsFlashCounter & 1) == 0) {
-            gpsColor = iob_satellites_visible > minSats ? &hsv_green : &hsv_orange;
+            gpsColor = iob_satellites_visible >= minSats ? &hsv_green : &hsv_orange;
         } else {
             gpsColor = iob_fix_type > 2 ? &hsv_black : &hsv_red;
         }
@@ -846,7 +846,6 @@ void updateLedStrip(void)
     static uint8_t indicatorFlashState = 0;
 
     uint32_t now = millis();
-
     bool indicatorFlashNow = (int32_t)(now - nextIndicatorFlashAt) >= 0L;
     bool warningFlashNow = (int32_t)(now - nextWarningFlashAt) >= 0L;
 #ifdef USE_LED_GPS
@@ -915,7 +914,6 @@ void updateLedStrip(void)
         }
         nextRotationUpdateAt = now + LED_STRIP_5HZ/animationSpeedScale;
     }
-
     //All layers applied, send it to strip
     show();
 }

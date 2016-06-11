@@ -35,6 +35,7 @@ const char PROGMEM cmd_lbp_P[] = "lowpct";
 const char PROGMEM cmd_bright_P[] = "brightness";
 const char PROGMEM cmd_anim_P[] = "animation";
 const char PROGMEM cmd_freset_P[] = "factory";
+const char PROGMEM cmd_minsats_P[] = "minsats";
 
 
 void enterCommandMode() {
@@ -101,7 +102,7 @@ void doCommand() {
   
     //(v) Version info.
     if (strncmp_P(cmdBuffer, cmd_version_P, got) == 0) {
-       println(F("Version : " VER));
+       println(F("Version: " VER));
        return;
     }
 
@@ -169,7 +170,7 @@ void doCommand() {
         lowBattVolt = val;
         writeEP16(LOWBATT_VOLT, val * 1000);
       } else {
-        print(F("Low battery cell voltage: "));
+        print(F("Low cell: "));
         print(lowBattVolt);
         println(F("v"));
       }
@@ -184,9 +185,23 @@ void doCommand() {
         lowBattPct = val;
         writeEEPROM(LOWBATT_PCT, val);
       } else {
-        print(F("Low battery percentage: "));
+        print(F("Low pct: "));
         print(lowBattPct);
         println(F("%"));
+      }
+      return;
+    }
+
+    //(minsats) Minimum visible satellites
+    if (strncmp_P(cmdBuffer, cmd_minsats_P, got) == 0) {
+      if (arg) {
+        int val = getNumericArg(arg, 100);
+        if (val < 0) return;
+        minSats = val;
+        writeEEPROM(MIN_SATS, val);
+      } else {
+        print(F("Min sats: "));
+        println(minSats);
       }
       return;
     }
@@ -200,12 +215,15 @@ void doCommand() {
         setBrightness(stripBright);
         writeEEPROM(STRIP_BRIGHT, stripBright);
       } else {
-        print(F("Strip brightness: "));
+        print(F("Brightness: "));
         print((uint8_t)((float)stripBright / 2.55f));
         println(F("%"));
       }
       return;
     }
+
+  //Lamptest function?
+
 
 #ifdef USE_LED_ANIMATION
     //(animation) LED strip disarmed animation
@@ -214,7 +232,7 @@ void doCommand() {
         stripAnim = (strstr(arg, "y") || strstr(arg, "Y"));
         writeEEPROM(STRIP_ANIM, stripAnim);
       } else {
-        print(F("Disarmed animation: "));
+        print(F("Animation: "));
         if (stripAnim) println(F("YES")); 
         else println(F("NO"));
       }
@@ -280,7 +298,7 @@ void doCommand() {
 #ifndef SOFTSER
     //(quit) Return to Mavlink mode
     if (strncmp_P(cmdBuffer, cmd_quit_P, got) == 0) {
-      println(F("Resuming Mavlink mode."));
+      println(F("Resuming Mavlink mode.."));
       cli_active = 0;
       return;
     }
@@ -295,6 +313,7 @@ void doCommand() {
       "mode_color\tConfigure colors for modes\r\n"
       "lowcell   \tLow battery cell voltage\r\n"
       "lowpct    \tLow battery percentage\r\n"
+      "minsats   \tMinimum visible satellites\r\n"
       "brightness\tLED strip brightness\r\n" 
 #ifdef USE_LED_ANIMATION
       "animation \tAnimation when disarmed\r\n" 
