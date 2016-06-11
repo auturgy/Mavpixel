@@ -15,8 +15,8 @@ Derived from: jD-IOBoard_MAVlink Driver
 // If you use, modify, redistribute, Remember to share your modifications and 
 // you need to include original authors along with your work !!
 //
-// Copyright (c) 2013, Jani Hirvinen, jDrones & Co.
-// All rights reserved.
+// Mavpixel Mavlink Neopixel bridge
+// (c) 2016 Nick Metcalfe
 //
 // - Redistribution and use in source and binary forms, with or without 
 //   modification, are permitted provided that the following conditions are met:
@@ -70,11 +70,13 @@ Derived from: jD-IOBoard_MAVlink Driver
 #define HEARTBEAT     // HeartBeat signal
 #define SOFTSER       //Use SoftwareSerial as configuration port
 //#define DEBUG         //Output extra debug information 
-//#define membug        //Check memory usage
+#define membug        //Check memory usage
 //#define DUMPVARS      //adds CLI command to dump mavlink variables 
 #define LED_STRIP
 #define USE_LED_GPS
-//#define USE_LED_ANIMATION
+#define USE_LED_ANIMATION
+
+
 /* **********************************************/
 /* ***************** INCLUDES *******************/
 
@@ -104,8 +106,8 @@ Derived from: jD-IOBoard_MAVlink Driver
 #include <MemoryFree.h>
 #endif
 
-#include <SoftwareSerial.h>
-#include <FastLED.h>
+#include <AltSoftSerial.h>
+#include <Adafruit_NeoPixel.h>
 
 // Configurations
 #include "IOBoard.h"
@@ -143,11 +145,13 @@ SimpleTimer  mavlinkTimer;
 #define NEO_PIN2 15
 #define NEO_PIN3 16
 #define NEO_PIN4 17
-CRGB ledrgb[32];
+Adafruit_NeoPixel* strip[4];
 #endif
 
 #ifdef SOFTSER
-SoftwareSerial dbSerial(12,11);        // For debug porposes we are using pins 11, 12
+//SoftwareSerial dbSerial(12,11);        // For debug porposes we are using pins 11, 12
+//SoftwareSerial dbSerial(8,9);        // For debug porposes we are using pins 11, 12
+AltSoftSerial dbSerial;        // AltSoftSerial always uses pins 9, 8
 #define println dbSerial.println
 #define print dbSerial.print
 #else
