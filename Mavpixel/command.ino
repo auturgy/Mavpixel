@@ -243,11 +243,13 @@ void doCommand() {
 #endif
 
     //(factory) Factory Reset.
-    if (got == 7 && strncmp_P(cmdBuffer, cmd_freset_P, got) == 0) {
+    if (strncmp_P(cmdBuffer, cmd_freset_P, got) == 0) {
+      if (got == 7) { 
        // Factory reset request flag 
        writeEEPROM(FACTORY_RESET, 1);
        println(F("Please reset Mavpixel."));
-       return;
+      }
+      return;
     }
 
     //(baud) Configure Mavlink baud rate

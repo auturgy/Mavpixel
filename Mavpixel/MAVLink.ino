@@ -101,10 +101,18 @@ void CLIchar(uint8_t c) {
    } else {
      //Add character to buffer
      if (cmdLen < 31) {
-       cmdBuffer[cmdLen] = c;
-       cmdBuffer[cmdLen + 1] = 0;
-       cmdLen++;
-       print((char)c);      //Echo
+       if (c == 8) {              //Backspace
+         if (cmdLen > 0) {
+           cmdLen--;
+           cmdBuffer[cmdLen] = 0;
+         }
+       }
+       else {
+         cmdBuffer[cmdLen] = c;
+         cmdBuffer[cmdLen + 1] = 0;
+         cmdLen++;
+       }
+       print((char)c);      //Echo 
      }
    }
 }
