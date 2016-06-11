@@ -624,7 +624,7 @@ void applyLedGpsLayer(bool updateNow)
         }
     }
 
-    for (int i = 0; i < ledCount; ++i) {
+    for (int i = 0; i < ledCount; i++) {
         const ledConfig_t *ledConfig = &ledConfigs[i];
 
         if (ledConfig->flags & LED_FUNCTION_GPS) {

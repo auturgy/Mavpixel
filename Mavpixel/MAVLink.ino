@@ -105,14 +105,15 @@ void CLIchar(uint8_t c) {
          if (cmdLen > 0) {
            cmdLen--;
            cmdBuffer[cmdLen] = 0;
+           print((char)c);      //Echo 
          }
        }
        else {
          cmdBuffer[cmdLen] = c;
          cmdBuffer[cmdLen + 1] = 0;
          cmdLen++;
+         print((char)c);      //Echo 
        }
-       print((char)c);      //Echo 
      }
    }
 }

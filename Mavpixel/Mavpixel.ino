@@ -159,7 +159,6 @@ AltSoftSerial dbSerial;        // AltSoftSerial always uses pins 9, 8
 #define print Serial.print
 #endif
 
-
 /* **********************************************/
 /* ***************** SETUP() *******************/
 
