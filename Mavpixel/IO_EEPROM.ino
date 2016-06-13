@@ -116,10 +116,31 @@ void writeFactorySettings() {
  writeEEPROM(MIN_SATS, 6);
 
  // Write details for versioncheck to EEPROM
- writeEEPROM(CHK1, 22);
- writeEEPROM(CHK2, 21);
- writeEEPROM(VERS, CHKVER);
+ writeEEPROM(VERMIN, CHKMIN);
+ writeEEPROM(VERMAJ, CHKMAJ);
+ writeEEPROM(VERS, CHKMAJ * 10 + CHKMIN);
  
  // Factory reset request flag 
  writeEEPROM(FACTORY_RESET, 0);
 }
+
+// Check that EEPROM has initial settings, if not write them
+// We can use same or newer EEPROM settings. This allows downgrading without losing settings.
+boolean checkEeprom() {
+  uint8_t ver_major = readEEPROM(VERMAJ);
+  uint8_t ver_minor = readEEPROM(VERMIN);
+  if(ver_major != CHKMAJ ||  ver_minor < CHKMIN || readEEPROM(FACTORY_RESET)) {
+/*  Not needed yet..  
+    if (ver_major == CHKMAJ && ver_minor + 1 == CHKMIN) {
+    //if required we can upgrade the EEPROM from previous version here
+      
+      return false;
+    }
+    else
+*/
+    // Write factory settings on EEPROM
+    writeFactorySettings();
+    return true;
+  }
+}
+

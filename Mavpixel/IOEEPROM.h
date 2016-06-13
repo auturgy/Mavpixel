@@ -35,8 +35,8 @@
 #define MIN_SATS      145
 
 // Internal version, check placeholders
-#define CHK1 252
-#define CHK2 253
+#define VERMAJ 252
+#define VERMIN 253
 #define VERS 254
 
 #define LED_CONFIGS 256  //128 bytes (32 * ledConfig_t)
