@@ -119,7 +119,8 @@ Derived from: jD-IOBoard_MAVlink Driver
 /* ***************** DEFINITIONS *******************/
 
 #define VER "2.0"   // Software version
-#define CHKVER 43    // Version number to check from EEPROM
+#define CHKMAJ 2    // Major version number to check from EEPROM
+#define CHKMIN 0    // Minor version number to check from EEPROM
 
 #define ledPin 13     // Heartbeat LED if any
 
@@ -149,8 +150,6 @@ Adafruit_NeoPixel* strip[4];
 #endif
 
 #ifdef SOFTSER
-//SoftwareSerial dbSerial(12,11);        // For debug porposes we are using pins 11, 12
-//SoftwareSerial dbSerial(8,9);        // For debug porposes we are using pins 11, 12
 AltSoftSerial dbSerial;        // AltSoftSerial always uses pins 9, 8
 #define println dbSerial.println
 #define print dbSerial.print
@@ -164,19 +163,14 @@ AltSoftSerial dbSerial;        // AltSoftSerial always uses pins 9, 8
 
 void setup() 
 {
-  boolean eeReset = false;
-  // Check that EEPROM has initial settings, if not write them
-  if((readEEPROM(CHK1) + readEEPROM(CHK2) != CHKVER) || readEEPROM(FACTORY_RESET)) {
-    // Write factory settings on EEPROM
-    eeReset = true;
-    writeFactorySettings();
-  }
+  //Check EEPROM contents and versioning first
+  boolean eeReset = checkEeprom();
   
   // Initialize Mavlink Serial port, speed
   Serial.begin((uint32_t)readEP16(MAVLINK_BAUD) * 10);
 
 #ifdef SOFTSER
-  // Our software serial is connected on pins D11 and D12
+  // Our software serial is connected on pins 9 and 8
   dbSerial.begin((uint32_t)readEP16(SOFTSER_BAUD) * 10);                    // We don't want to too fast
 #endif
 
