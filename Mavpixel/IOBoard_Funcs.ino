@@ -98,6 +98,12 @@ byte isBit(byte param, byte bitfield) {
   else return 0;  
 }
 
+//Jump to the bootloader
+void softwareReboot()
+{
+  asm volatile (" jmp (30720)");
+}
+
 #ifdef DUMPVARS
 void dumpVars() {
  print(F("Sats:"));

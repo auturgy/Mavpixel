@@ -36,6 +36,7 @@ const char PROGMEM cmd_bright_P[] = "brightness";
 const char PROGMEM cmd_anim_P[] = "animation";
 const char PROGMEM cmd_freset_P[] = "factory";
 const char PROGMEM cmd_minsats_P[] = "minsats";
+const char PROGMEM cmd_reboot_P[] = "reboot";
 
 
 void enterCommandMode() {
@@ -252,6 +253,11 @@ void doCommand() {
       return;
     }
 
+    //(reboot) Reset.
+    if (strncmp_P(cmdBuffer, cmd_reboot_P, got) == 0) {
+      if (got == 6) softwareReboot();
+    }
+
     //(baud) Configure Mavlink baud rate
     if (strncmp_P(cmdBuffer, cmd_baud_P, got) == 0) {
       if (arg) {
@@ -324,6 +330,7 @@ void doCommand() {
       "baud      \tSet serial baud rate\r\n" 
       "softbaud  \tSet software serial baud rate\r\n" 
       "factory   \tFactory reset\r\n"
+      "reboot    \tReset the Mavpixel\r\n"
 #ifdef DUMPVARS
       "vars      \tDump variables\r\n" 
 #endif

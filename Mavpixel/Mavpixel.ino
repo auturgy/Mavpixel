@@ -171,10 +171,11 @@ void setup()
 
 #ifdef SOFTSER
   // Our software serial is connected on pins 9 and 8
-  dbSerial.begin((uint32_t)readEP16(SOFTSER_BAUD) * 10);                    // We don't want to too fast
+  // We don't want to too fast, max baud 38400
+  dbSerial.begin((uint32_t)readEP16(SOFTSER_BAUD) * 10);                    
 #endif
 
-  println(F("Mavpixel " VER " initialised."));
+  println(F("\r\nMavpixel " VER " initialised."));
   if (eeReset) println(F("Factory Reset."));
   // setup mavlink port
   mavlink_comm_0_port = &Serial;
