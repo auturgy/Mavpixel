@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>  
+<Mavpixel>  
+	<Release>
+		<name>Mavpixel v2.0 beta</name>
+		<version>2.0</version>  
+		<url>https://github.com/prickle/Mavpixel/releases/download/v2.0-beta/Mavpixel20beta.hex</url>
+		<notes>- Initial beta release. 
+- Mavpixel is starting at version 2.0 as its based on jD-IOBoard version 1.5.
+- This release is expected to have some bugs. Please test thoroughly before use and beware.
+</notes>
+	</Release>
+</Mavpixel>
