@@ -980,7 +980,7 @@ void printColorConfig(uint8_t index)
     print(colors[index]->v);
 }
 
-bool parseMode(const char *modeConfig)
+bool parseMci(const char *modeConfig)
 {
     const char *remainingCharacters = modeConfig;
     uint16_t mode, color;
@@ -1004,6 +1004,19 @@ bool parseMode(const char *modeConfig)
         if (remainingCharacters) remainingCharacters++;
         else if (componentIndex != 2) return false;
         else writeModeColor(mode, val, color);
+    }
+    return true;
+}
+
+bool parseMode(int mode, const char *modeColors)
+{
+    const char *remainingCharacters = modeColors;
+    for (uint8_t index = 0; index <= MODE_COLOR_INDEX_MAX; index++) {
+        uint16_t color = atoi(remainingCharacters);
+        writeModeColor(mode, index, color);
+        remainingCharacters = strstr(remainingCharacters, ",");
+        if (remainingCharacters) remainingCharacters++;
+        else if (index != MODE_COLOR_INDEX_MAX) return false;
     }
     return true;
 }

@@ -159,8 +159,14 @@ void doCommand() {
         int i = getNumericArg(arg, 20);
         if (i < 0) return;
         //Get second word
+        cp = strstr(arg, " ");
+        if (cp) {
+          got = arg - cmdBuffer; //length of first word
+          cp += 1; //ptr to argument
+          checkParse(parseMode(i, cp));
+        }
         cp = strstr(arg, ",");
-        if (cp) checkParse(parseMode(arg));
+        if (cp) checkParse(parseMci(arg));
         else printMode(i);
       } else for (int i = 0; i <= 20; i++) printMode(i);
       return;
