@@ -96,6 +96,9 @@ void doCommand() {
     got = strlen(cmdBuffer);
     if (got == 0) return;
     
+    //Ignore comments.
+    if (*cmdBuffer == '/') return;
+    
     //Get first word
     arg = strstr(cmdBuffer, " ");
     if (arg) {
