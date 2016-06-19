@@ -29,11 +29,13 @@ void changeBaudRate(uint32_t newBaud) {
   while(Serial.available()) Serial.read();
 }
 
+#ifdef SOFTSER
 void changeSoftRate(uint32_t newBaud) {
   dbSerial.flush();
   dbSerial.begin(newBaud);
   while(dbSerial.available()) dbSerial.read();
 }
+#endif
 
 #ifdef HEARTBEAT
 void HeartBeat() {
@@ -101,6 +103,7 @@ byte isBit(byte param, byte bitfield) {
 //Jump to the bootloader
 void softwareReboot()
 {
+  delay(500);
   asm volatile (" jmp (30720)");
 }
 

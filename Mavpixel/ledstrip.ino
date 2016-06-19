@@ -644,7 +644,7 @@ void applyLedGpsLayer(bool updateNow)
 }
 #endif
 
-#define INDICATOR_DEADBAND 25
+//#define INDICATOR_DEADBAND 25
 
 void applyLedIndicatorLayer(uint8_t indicatorFlashState)
 {
@@ -671,22 +671,22 @@ void applyLedIndicatorLayer(uint8_t indicatorFlashState)
             continue;
         }
 
-        if (iob_chan1 > 1500 + INDICATOR_DEADBAND) {
+        if (iob_chan1 > 1500 + deadBand) {
             applyQuadrantColor(ledIndex, ledConfig, QUADRANT_NORTH_EAST, flashColor);
             applyQuadrantColor(ledIndex, ledConfig, QUADRANT_SOUTH_EAST, flashColor);
         }
 
-        if (iob_chan1 < 1500 - INDICATOR_DEADBAND) {
+        if (iob_chan1 < 1500 - deadBand) {
             applyQuadrantColor(ledIndex, ledConfig, QUADRANT_NORTH_WEST, flashColor);
             applyQuadrantColor(ledIndex, ledConfig, QUADRANT_SOUTH_WEST, flashColor);
         }
 
-        if (iob_chan2 < 1500 - INDICATOR_DEADBAND) {
+        if (iob_chan2 < 1500 - deadBand) {
             applyQuadrantColor(ledIndex, ledConfig, QUADRANT_NORTH_EAST, flashColor);
             applyQuadrantColor(ledIndex, ledConfig, QUADRANT_NORTH_WEST, flashColor);
         }
 
-        if (iob_chan2 > 1500 + INDICATOR_DEADBAND) {
+        if (iob_chan2 > 1500 + deadBand) {
             applyQuadrantColor(ledIndex, ledConfig, QUADRANT_SOUTH_EAST, flashColor);
             applyQuadrantColor(ledIndex, ledConfig, QUADRANT_SOUTH_WEST, flashColor);
         }

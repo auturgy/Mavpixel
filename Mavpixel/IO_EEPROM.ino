@@ -110,10 +110,11 @@ void writeFactorySettings() {
  writeEP16(MAVLINK_BAUD, 5760);  // b/10
  writeEEPROM(LOWBATT_PCT, 20);
  writeEP16(LOWBATT_VOLT, 3300); // v*1000
- writeEEPROM(STRIP_BRIGHT, 255);
+ writeEEPROM(STRIP_BRIGHT, 16);
  writeEEPROM(STRIP_ANIM, 0);
  writeEP16(SOFTSER_BAUD, 240);  // b/10
  writeEEPROM(MIN_SATS, 6);
+ writeEEPROM(DEADBAND, 40);
 
  // Write details for versioncheck to EEPROM
  writeEEPROM(VERMIN, CHKMIN);

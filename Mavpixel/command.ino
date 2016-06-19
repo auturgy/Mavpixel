@@ -37,6 +37,8 @@ const char PROGMEM cmd_anim_P[] = "animation";
 const char PROGMEM cmd_freset_P[] = "factory";
 const char PROGMEM cmd_minsats_P[] = "minsats";
 const char PROGMEM cmd_reboot_P[] = "reboot";
+const char PROGMEM cmd_help_P[] = "help";
+const char PROGMEM cmd_deadband_P[] = "deadband";
 
 
 void enterCommandMode() {
@@ -70,13 +72,13 @@ void printMode(uint8_t i) {
 int getNumericArg(char *ptr, int maxVal) {
   int i = atoi(ptr);
   if (i < 0 || i > maxVal) {
-    println(F("Range error.")); 
+    println(F("Range error")); 
     return -1;
   }
 }
 
 boolean checkParse(boolean ok) {
-  if (!ok) println(F("Parse error."));
+  if (!ok) println(F("Parse error"));
   return ok;
 }
 
@@ -223,6 +225,20 @@ void doCommand() {
       return;
     }
 
+    //(deadband) stck movement deadband
+    if (strncmp_P(cmdBuffer, cmd_deadband_P, got) == 0) {
+      if (arg) {
+        int val = getNumericArg(arg, 255);
+        if (val < 0) return;
+        deadBand = val;
+        writeEEPROM(DEADBAND, deadBand);
+      } else {
+        print(F("Deadband: "));
+        println(deadBand);
+      }
+      return;
+    }
+
   //Lamptest function?
 
 
@@ -248,7 +264,7 @@ void doCommand() {
       if (got == 7) { 
        // Factory reset request flag 
        writeEEPROM(FACTORY_RESET, 1);
-       println(F("Please reset Mavpixel."));
+       println(F("Please reset Mavpixel"));
       }
       return;
     }
@@ -312,20 +328,21 @@ void doCommand() {
     }
 #endif
 
-    //Command unknown
-    println( F("List of commands:\r\n" 
+    if (strncmp_P(cmdBuffer, cmd_help_P, got) == 0) {
+      println( F("List of commands:\r\n" 
       "version   \tMavPixel firmware version\r\n" 
 #ifdef LED_STRIP
       "led       \tConfigure LEDs\r\n" 
       "color     \tConfigure colours\r\n" 
       "mode_color\tConfigure colors for modes\r\n"
-      "lowcell   \tLow battery cell voltage\r\n"
-      "lowpct    \tLow battery percentage\r\n"
-      "minsats   \tMinimum visible satellites\r\n"
       "brightness\tLED strip brightness\r\n" 
 #ifdef USE_LED_ANIMATION
       "animation \tAnimation when disarmed\r\n" 
 #endif
+      "lowcell   \tLow battery cell voltage\r\n"
+      "lowpct    \tLow battery percentage\r\n"
+      "minsats   \tMinimum visible satellites\r\n"
+      "deadband  \tStick center deadband\r\n" 
 #endif
       "baud      \tSet serial baud rate\r\n" 
       "softbaud  \tSet software serial baud rate\r\n" 
@@ -342,4 +359,10 @@ void doCommand() {
       "quit      \tExit CLI mode"
 #endif
       ));
+      return;
+    }
+
+    //Command unknown
+    println( F("Unknown command"));
+
 }

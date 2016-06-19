@@ -33,6 +33,7 @@
 #define STRIP_ANIM    142
 #define SOFTSER_BAUD  143  //16 bit
 #define MIN_SATS      145
+#define DEADBAND      146
 
 // Internal version, check placeholders
 #define VERMAJ 252

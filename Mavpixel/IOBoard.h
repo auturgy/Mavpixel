@@ -105,5 +105,6 @@ float cellVoltage = 0;
 uint8_t stripBright = 0;
 boolean stripAnim;
 uint8_t minSats;
+uint8_t deadBand;
 #endif
 

@@ -68,7 +68,7 @@ Derived from: jD-IOBoard_MAVlink Driver
 
 #define MAVLINK10     // Are we listening MAVLink 1.0 or 0.9   (0.9 is obsolete now)
 #define HEARTBEAT     // HeartBeat signal
-#define SOFTSER       //Use SoftwareSerial as configuration port
+//#define SOFTSER       //Use SoftwareSerial as configuration port
 //#define DEBUG         //Output extra debug information 
 #define membug        //Check memory usage
 //#define DUMPVARS      //adds CLI command to dump mavlink variables 
@@ -187,6 +187,7 @@ void setup()
   stripBright = readEEPROM(STRIP_BRIGHT);
   stripAnim = readEEPROM(STRIP_ANIM);
   minSats = readEEPROM(MIN_SATS);
+  deadBand = readEEPROM(DEADBAND);
   readStruct(LED_CONFIGS, (uint8_t*)ledConfigs, sizeof(ledConfigs));
   readColorConfigs();
   //Start the strip
