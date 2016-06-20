@@ -31,6 +31,9 @@
 #ifdef USE_LED_ANIMATION
 static uint32_t nextAnimationUpdateAt = 0;
 #endif
+#ifdef LAMPTEST
+static uint32_t nextLampTestUpdateAt = 0;
+#endif
 static uint32_t nextIndicatorFlashAt = 0;
 static uint32_t nextWarningFlashAt = 0;
 static uint32_t nextRotationUpdateAt = 0;
@@ -846,6 +849,17 @@ void updateLedStrip(void)
     static uint8_t indicatorFlashState = 0;
 
     uint32_t now = millis();
+
+#ifdef LAMPTEST
+    if (lampTest) {
+      if (now > nextLampTestUpdateAt) {
+        nextLampTestUpdateAt = now + LED_STRIP_20HZ;
+        rainbowCycle();
+      }
+      return;
+    }
+#endif
+    
     bool indicatorFlashNow = (int32_t)(now - nextIndicatorFlashAt) >= 0L;
     bool warningFlashNow = (int32_t)(now - nextWarningFlashAt) >= 0L;
 #ifdef USE_LED_GPS

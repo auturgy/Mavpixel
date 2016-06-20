@@ -75,7 +75,7 @@ Derived from: jD-IOBoard_MAVlink Driver
 #define LED_STRIP
 #define USE_LED_GPS
 #define USE_LED_ANIMATION
-
+#define LAMPTEST
 
 /* **********************************************/
 /* ***************** INCLUDES *******************/

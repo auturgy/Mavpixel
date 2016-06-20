@@ -39,6 +39,7 @@ const char PROGMEM cmd_minsats_P[] = "minsats";
 const char PROGMEM cmd_reboot_P[] = "reboot";
 const char PROGMEM cmd_help_P[] = "help";
 const char PROGMEM cmd_deadband_P[] = "deadband";
+const char PROGMEM cmd_lamptest_P[] = "lamptest";
 
 
 void enterCommandMode() {
@@ -248,8 +249,19 @@ void doCommand() {
       return;
     }
 
-  //Lamptest function?
-
+#ifdef LAMPTEST
+    //(lamptest)Lamptest function
+    if (strncmp_P(cmdBuffer, cmd_lamptest_P, got) == 0) {
+      if (arg) {
+        lampTest = (strstr(arg, "y") || strstr(arg, "Y"));
+      } else {
+        print(F("Lamptest: "));
+        if (lampTest) println(F("YES")); 
+        else println(F("NO"));
+      }
+      return;
+    }    
+#endif
 
 #ifdef USE_LED_ANIMATION
     //(animation) LED strip disarmed animation
@@ -352,6 +364,9 @@ void doCommand() {
       "lowpct    \tLow battery percentage\r\n"
       "minsats   \tMinimum visible satellites\r\n"
       "deadband  \tStick center deadband\r\n" 
+#ifdef LAMPTEST
+      "lamptest  \tShow test pattern\r\n" 
+#endif
 #endif
       "baud      \tSet serial baud rate\r\n" 
       "softbaud  \tSet software serial baud rate\r\n" 

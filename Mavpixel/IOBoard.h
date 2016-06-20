@@ -106,5 +106,6 @@ uint8_t stripBright = 0;
 boolean stripAnim;
 uint8_t minSats;
 uint8_t deadBand;
+uint8_t lampTest;
 #endif
 

@@ -169,4 +169,22 @@ void show() {
   strip[3]->show();
 }
 
+#ifdef LAMPTEST
+void rainbowCycle() {
+  static uint16_t j = 0;
+  hsvColor_t c;
+  c.s = 0;
+  c.v = 255;
+  uint16_t i;
+  if (j == 360) j == 0;
+  for(i = 0; i < 32; i++) {
+    c.h = (j + (i * 45)) % 359;
+    setLedHsv(i, &c);
+  }
+  show();
+  j += 10;
+}
 #endif
+
+#endif
+
