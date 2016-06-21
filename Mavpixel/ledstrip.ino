@@ -75,6 +75,8 @@ hsvColor_t hsv_blue        = LED_BLUE;
 hsvColor_t hsv_darkViolet  = LED_DARK_VIOLET;
 hsvColor_t hsv_magenta     = LED_MAGENTA;
 hsvColor_t hsv_deepPink    = LED_DEEP_PINK;
+hsvColor_t hsv_custom1     = LED_BLACK;
+hsvColor_t hsv_custom2     = LED_BLACK;
 
 #define LED_DIRECTION_COUNT 6
 
@@ -93,8 +95,8 @@ hsvColor_t* colors[] = {
         &hsv_darkViolet,
         &hsv_magenta,
         &hsv_deepPink,
-        &hsv_black,
-        &hsv_black
+        &hsv_custom1,
+        &hsv_custom2
 };
 
 typedef enum {
