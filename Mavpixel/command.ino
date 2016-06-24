@@ -168,6 +168,7 @@ void doCommand() {
           got = arg - cmdBuffer; //length of first word
           cp += 1; //ptr to argument
           checkParse(parseMode(i, cp));
+          return;
         }
         cp = strstr(arg, ",");
         if (cp) checkParse(parseMci(arg));
