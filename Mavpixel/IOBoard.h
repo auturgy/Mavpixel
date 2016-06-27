@@ -57,16 +57,49 @@
 
 #define MAX_MODES 20
 
+//Command/parameter string defs
+const char PROGMEM cmd_version_P[] = "version";
+const char PROGMEM cmd_quit_P[] = "quit";
+const char PROGMEM cmd_led_P[] = "led";
+const char PROGMEM cmd_color_P[] = "color";
+const char PROGMEM cmd_baud_P[] = "baud";
+const char PROGMEM cmd_soft_P[] = "softbaud";
+const char PROGMEM cmd_free_P[] = "free";
+const char PROGMEM cmd_vars_P[] = "vars";
+const char PROGMEM cmd_mode_P[] = "mode_color";
+const char PROGMEM cmd_lbv_P[] = "lowcell";
+const char PROGMEM cmd_lbp_P[] = "lowpct";
+const char PROGMEM cmd_bright_P[] = "brightness";
+const char PROGMEM cmd_anim_P[] = "animation";
+const char PROGMEM cmd_freset_P[] = "factory";
+const char PROGMEM cmd_minsats_P[] = "minsats";
+const char PROGMEM cmd_reboot_P[] = "reboot";
+const char PROGMEM cmd_help_P[] = "help";
+const char PROGMEM cmd_deadband_P[] = "deadband";
+const char PROGMEM cmd_lamptest_P[] = "lamptest";
+//For Mavlink parameter communications
+const char PROGMEM mav_led_P[] = "led_";
+const char PROGMEM mav_mode_P[] = "mode_";
+const char PROGMEM mav_color_P[] = "color_";
+
 // MAVLink HeartBeat bits
 #define MOTORS_ARMED 128
 
+#define ONBOARD_PARAM_COUNT 81//;44
 ///////////////////////////
 // Global variables
 
 // Counters and millisecond placeholders used around the code
-static long p_hbMillis;                         // HeartBeat counter
-static long c_hbMillis;
-static long d_hbMillis = 500;
+static uint32_t hbMillis;                         // HeartBeat timer
+static uint32_t hbTimer = 500;
+
+//Parameter send timer
+static uint32_t parMillis;                         // Parameter timer
+static uint32_t parTimer = 50;
+
+//Led timer
+static uint32_t led_flash = 500;
+static uint32_t p_led;
 
 static float    iob_vbat_A = 0;                 // Battery A voltage in milivolt
 static uint16_t iob_battery_remaining_A = 0;    // 0 to 100 <=> 0 to 1000
@@ -84,19 +117,26 @@ static int16_t   iob_chan2 = 1500;              //Pitch
 static uint16_t  iob_throttle = 0;               // throtle
 
 //MAVLink session control
-static boolean  mavbeat = 0;
-static float    lastMAVBeat = 0;
-static boolean  waitingMAVBeats = 1;
 static uint8_t  apm_mav_type;
 static uint8_t  apm_mav_system; 
 static uint8_t  apm_mav_component;
 static boolean  enable_mav_request = 0;
+static int16_t  m_parameter_i = ONBOARD_PARAM_COUNT;
+
+static uint8_t system_mode = MAV_MODE_PREFLIGHT; ///< Booting up
+static uint32_t custom_mode = 0;                 ///< Custom mode, can be defined by user/adopter
+static uint8_t system_state = MAV_STATE_STANDBY; ///< System ready for flight
+
+
+char mavParamBuffer[MAVLINK_MSG_PARAM_SET_FIELD_PARAM_ID_LEN];
 
 // General states
 byte flMode;          // Our current flight mode as defined
 byte isArmed = 0;     // Is motors armed flag
 byte isArmedOld = 0;  // Earlier Armed status flag
+static uint8_t crlf_count = 0;
 
+//LED Strip vars
 #ifdef LED_STRIP
 uint8_t lowBattPct;
 float lowBattVolt;

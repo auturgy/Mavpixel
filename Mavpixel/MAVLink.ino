@@ -30,8 +30,11 @@
 BetterStream	*mavlink_comm_0_port;
 BetterStream	*mavlink_comm_1_port;
 
-mavlink_system_t mavlink_system = {12,1,0,0};
-
+mavlink_system_t mavlink_system = {12,160,0,0};
+uint8_t system_type = MAV_TYPE_GENERIC;    //No type for a lighting controller, use next free?
+//uint8_t autopilot_type = MAV_AUTOPILOT_GENERIC;
+uint8_t autopilot_type = MAV_AUTOPILOT_INVALID;
+ 
 #include "Mavlink_compat.h"
 
 //#ifdef MAVLINK10
@@ -43,8 +46,58 @@ mavlink_system_t mavlink_system = {12,1,0,0};
 //#include "../GCS_MAVLink/include/mavlink/v0.9/ardupilotmega/mavlink.h"
 //#endif
 
-static uint8_t crlf_count = 0;
+void HeartBeat() {
+  uint32_t timer = millis();
+  if(timer - hbMillis > hbTimer) 
+  {
+    hbMillis = timer;
+#ifdef HEARTBEAT
+#ifndef SOFTSER  //Active CLI on telemetry port pauses mavlink
+    if (!cli_active) {
+#else
+    {
+#endif
+      //emit heartbeat
+      mavlink_message_t msg;
+      mavlink_msg_heartbeat_send(MAVLINK_COMM_0, system_type, autopilot_type, system_mode, custom_mode, system_state);
+    }
+#endif 
+#ifdef RATEREQ
+    mavStreamRequest();  //Request rate control.
+#endif
+    messageCounter++;    //used to timeout Mavlink in main loop
+  }
+}
 
+#ifdef RATEREQ
+//Request data streams from flight controller if required
+// periodically called from heartbeat
+void mavStreamRequest() {
+  //Do rate control requests
+  if(enable_mav_request > 0) { //Request rate control.
+    println(F(" rate request..")); 
+    enable_mav_request--;
+    request_mavlink_rates();   
+  }
+}
+#endif
+
+//Send Mavlink parameter list
+// Called from main loop
+void mavSendData() {
+  uint32_t timer = millis();
+  if(timer - parMillis > parTimer) {
+    parMillis = timer;
+    //send parameters one by one
+    if (m_parameter_i < ONBOARD_PARAM_COUNT) {
+      mavSendParameter(m_parameter_i);
+      m_parameter_i++;
+    }
+  }
+}  
+
+
+#ifdef RATEREQ
 void request_mavlink_rates()
 {
   const int  maxStreams = 7;
@@ -64,59 +117,7 @@ void request_mavlink_rates()
 					       MAVStreams[i], MAVRates[i], 1);
   }
 }
-
-boolean countCrLf(uint8_t c) {
-    /* allow CLI to be started by hitting enter 3 times, if no
-     heartbeat packets have been received */
-#ifndef SOFTSER
-  if (mavlink_active == 0 && cli_active == 0 && millis() < 20000) {
-#else
-  if (cli_active == 0) {
 #endif
-      if (c == '\n') {
-          crlf_count++;
-      } else if (c != '\r') {
-          crlf_count = 0;
-      }
-      if (crlf_count > 2) {
-        cli_active = true;
-        crlf_count = 0;
-        enterCommandMode();
-        cmdLen = 0;
-        cmdBuffer[0] = 0;
-        return true;
-      }
-  }
-  return false;
-}
-
-void CLIchar(uint8_t c) {
-   if (c == '\n') {
-     //got a full buffer
-     println();
-     doCommand();
-     print(F("#"));
-     cmdLen = 0;
-     cmdBuffer[0] = 0;
-   } else {
-     //Add character to buffer
-     if (cmdLen < 31) {
-       if (c == 8) {              //Backspace
-         if (cmdLen > 0) {
-           cmdLen--;
-           cmdBuffer[cmdLen] = 0;
-           print((char)c);      //Echo 
-         }
-       }
-       else {
-         cmdBuffer[cmdLen] = c;
-         cmdBuffer[cmdLen + 1] = 0;
-         cmdLen++;
-         print((char)c);      //Echo 
-       }
-     }
-   }
-}
 
 #ifdef SOFTSER
 void read_softser(){
@@ -148,16 +149,16 @@ void read_mavlink(){
       // trying to grab msg  
       if(mavlink_parse_char(MAVLINK_COMM_0, c, &msg, &status)) {
          mavlink_active = 1;
-         d_hbMillis = 500;
-        // handle msg
-  
+         messageCounter = 0;
+         led_flash = 500;
+
+        // handle msg  
         switch(msg.msgid) {
           case MAVLINK_MSG_ID_HEARTBEAT:
             {
 #ifdef DEBUG
               println(F("MAVLink HeartBeat"));
 #endif
-              mavbeat = 1;
   	      apm_mav_system    = msg.sysid;
   	      apm_mav_component = msg.compid;
               apm_mav_type      = mavlink_msg_heartbeat_get_type(&msg);
@@ -181,7 +182,6 @@ void read_mavlink(){
    
               iob_state = mavlink_msg_heartbeat_get_system_status(&msg);
 
-              lastMAVBeat = millis();
             }
             break;
             
@@ -248,6 +248,31 @@ void read_mavlink(){
 #endif
             }  
             break;
+          case MAVLINK_MSG_ID_PARAM_REQUEST_LIST:
+	    {
+		// Start sending parameters
+		m_parameter_i = 0;
+                println("Parameter request.");
+	    }
+	    break;
+          case MAVLINK_MSG_ID_PARAM_REQUEST_READ:
+	    {
+                //Send single parameter (named parameters not supported..)
+                mavSendParameter(mavlink_msg_param_request_read_get_param_index(&msg));
+                //mavlink_msg_param_request_read_get_param_id(&msg, mavParamBuffer);
+                print("Parameter request for parameter ");
+                println(m_parameter_i);
+	    }
+	    break;
+          case MAVLINK_MSG_ID_MISSION_REQUEST_LIST:
+	    {
+              mavlink_msg_mission_count_send(MAVLINK_COMM_0,
+                apm_mav_system,
+                apm_mav_component,
+                0);
+                println("Mission request.");
+	    }
+	    break;
           default:
             //Do nothing
             break;
@@ -260,4 +285,56 @@ void read_mavlink(){
     //next one
   }
 }
+
+//Send a single Mavlink parameter by index
+mavlink_param_union_t param;
+void mavSendParameter(int16_t index) {
+  //Basic single-value parameters
+  if (index == 0) mavlinkSendParam(cmd_version_P, -1, index, mavpixelVersion);
+  else if (index == 1) mavlinkSendParam(cmd_bright_P, -1, index, (uint8_t)((float)stripBright / 2.55f));
+  else if (index == 2) mavlinkSendParam(cmd_anim_P, -1, index, stripAnim);
+  else if (index == 3) mavlinkSendParam(cmd_lbv_P, -1, index, lowBattVolt);
+  else if (index == 4) mavlinkSendParam(cmd_lbp_P, -1, index, lowBattPct);
+  else if (index == 5) mavlinkSendParam(cmd_minsats_P, -1, index, minSats);
+  else if (index == 6) mavlinkSendParam(cmd_deadband_P, -1, index, deadBand);
+  else if (index == 7) mavlinkSendParam(cmd_baud_P, -1, index, (uint32_t)readEP16(MAVLINK_BAUD) * 10);
+  else if (index == 8) mavlinkSendParam(cmd_soft_P, -1, index, (uint32_t)readEP16(SOFTSER_BAUD) * 10);
+  else if (index == 9) mavlinkSendParam(cmd_lamptest_P, -1, index, lampTest);
+  else if (index == 10) mavlinkSendParam(cmd_freset_P, -1, index, readEEPROM(FACTORY_RESET));
+  else if (index == 11) mavlinkSendParam(cmd_reboot_P, -1, index, 0);
+  //LEDs - sent as 4 byte XY(1):FLAGS(2):COLOR(1)
+  else if (index >= 12 && index < 44) 
+  {
+    memcpy(&param, &ledConfigs[index - 12], 4);     
+    mavlinkSendParam(mav_led_P, index - 12, index, param.param_float);
+  }
+  //Modes - sent as 4 byte North&low3bitsofEast:South&high2bitsofEast:West&low3bitsofUp:Down&high2bitsofUp
+  else if (index >= 44 && index < 65) {
+    uint8_t color = index - 44;
+    uint16_t c = readModeColor(color, 1);
+    param.bytes[0] = readModeColor(color, 0) + ((c << 5) & 0b11100000);
+    param.bytes[1] = readModeColor(color, 2) + ((c << 2) & 0b11100000);
+    c = readModeColor(color, 4);
+    param.bytes[2] = readModeColor(color, 3) + ((c << 5) & 0b11100000);
+    param.bytes[3] = readModeColor(color, 5) + ((c << 2) & 0b11100000);
+    mavlinkSendParam(mav_mode_P, color, index, param.param_float);
+  }
+  //Colour palette - sent as 4 byte Hue(2):Sat(1):Val(1) 
+  else if (index >= 65 && index < 81) {
+    memcpy(&param, colors[index - 65], 3);
+    param.bytes[4] = 0;
+    mavlinkSendParam(mav_color_P, index - 65, index, param.param_float);
+  }
+}
+
+//Send a parameter given a name, index and value
+// if provided a non-negative nameIndex, append to name and send as uint32 rather than float
+void mavlinkSendParam(const prog_char name_P[], int nameIndex, int index, float value) {
+     strcpy_P(mavParamBuffer, name_P);
+     if (nameIndex >= 0) itoa(nameIndex, mavParamBuffer + strlen_P(name_P), 10);
+     mavlink_msg_param_value_send(MAVLINK_COMM_0, mavParamBuffer,
+	  value, nameIndex >= 0 ? MAVLINK_TYPE_UINT32_T : MAVLINK_TYPE_FLOAT,
+          ONBOARD_PARAM_COUNT, index);
+}
+
 

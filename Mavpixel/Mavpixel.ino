@@ -68,7 +68,8 @@ Derived from: jD-IOBoard_MAVlink Driver
 
 #define MAVLINK10     // Are we listening MAVLink 1.0 or 0.9   (0.9 is obsolete now)
 #define HEARTBEAT     // HeartBeat signal
-//#define SOFTSER       //Use SoftwareSerial as configuration port
+#define RATEREQ       //Send stream rate requests
+#define SOFTSER       //Use SoftwareSerial as configuration port
 //#define DEBUG         //Output extra debug information 
 #define membug        //Check memory usage
 //#define DUMPVARS      //adds CLI command to dump mavlink variables 
@@ -99,7 +100,6 @@ Derived from: jD-IOBoard_MAVlink Driver
 	#include "wiring.h"
 #endif
 #include <EEPROM.h>
-#include <SimpleTimer.h>
 #include <GCS_MAVLink.h>
 
 #ifdef membug
@@ -121,7 +121,7 @@ Derived from: jD-IOBoard_MAVlink Driver
 #define VER "2.0"   // Software version
 #define CHKMAJ 2    // Major version number to check from EEPROM
 #define CHKMIN 0    // Minor version number to check from EEPROM
-
+float mavpixelVersion = CHKMAJ + (float)(CHKMIN / 10);
 #define ledPin 13     // Heartbeat LED if any
 
 //Main loop controls
@@ -136,9 +136,6 @@ uint8_t cmdLen = 0;
 
 // Objects and Serial definitions
 FastSerialPort0(Serial);
-
-// Periodic timer
-SimpleTimer  mavlinkTimer;
 
 //LED strip IO Pins
 #ifdef LED_STRIP
@@ -203,17 +200,11 @@ void setup()
 
   println(F("Press <Enter> 3 times for CLI."));
   
-  // Startup MAVLink timers, 50ms runs
-  mavlinkTimer.Set(&OnMavlinkTimer, 50);
-
-  // House cleaning, enable timers
-  mavlinkTimer.Enable();
-  
   // Enable MAV rate request
 #ifndef SOFTSER
-  enable_mav_request = DI;  //delayed start  
+  enable_mav_request = 0;  //delayed start  
 #else
-  enable_mav_request = EN;  //start immediately
+  enable_mav_request = 3;  //start immediately
 #endif
 
 } // END of setup();
@@ -227,63 +218,50 @@ void setup()
 // MainLoop()
 void loop() 
 {
-#ifdef HEARTBEAT
-    HeartBeat();   // Update heartbeat LED on pin = ledPin (usually D13)
-#endif
+    //Onboard LED
+    ledFlasher();    // Update blinky LED on pin = ledPin (usually D13)
+
+    //Send Mavlink heartbeat (also sends rate requests) 
+    HeartBeat();     //  Heartbeat and other timed Mavlink events
 
 #ifdef LED_STRIP
+    //Update the LED strip
     updateLedStrip();
 #endif
 
-    if(enable_mav_request == 1) { //Request rate control. 
-      for(int n = 0; n < 3; n++) {
-        request_mavlink_rates();   //Three times to certify it will be readed
-        delay(50);
-#ifdef LED_STRIP
-        updateLedStrip();    //Update the strip between sends
+#ifdef SOFTSER
+    //Process software serial CLI
+    read_softser();
 #endif
-      }
-      enable_mav_request = 0;
-      waitingMAVBeats = 0;
-      lastMAVBeat = millis();    // Preventing error from delay sensing
-      d_hbMillis = 100;        //Fast flash
-    }  
-    
+
+    //Read and interpret Mavlink (Also does CLI over Mavlink port if SOFTSER disabled)
+    read_mavlink();
+
+    //Send any queued Mavlink messages    
+    mavSendData();
+
+    //Mavlink data stream rate requests
+#ifdef RATEREQ
     // Request rates again on every 10th check if mavlink is still dead.
 #ifndef SOFTSER  //Active CLI on telemetry port pauses mavlink
     if(!mavlink_active && messageCounter >= 10 && !cli_active) {
 #else
     if(!mavlink_active && messageCounter >= 10) {
 #endif
-      enable_mav_request = 1;
+println(F("Requesting rates.."));
+      enable_mav_request = 3;//1; //Three times to certify it will be readed
       messageCounter = 0;
     } 
-
-#ifdef SOFTSER
-    read_softser();
-#endif    
-    read_mavlink();
-    mavlinkTimer.Run();
-}
-
-/* *********************************************** */
-/* ******** functions used in main loop() ******** */
-
-// Function that is called every 120ms
-void OnMavlinkTimer()
-{
-  if(millis() < (lastMAVBeat + 3000)) {
-    // General condition checks starts from here
-
-    if(messageCounter >= 20 && mavlink_active) {
-#ifdef DEBUG
-      println(F("We lost MAVLink"));
 #endif
+
+    //Check for Mavlink lost
+    if(mavlink_active && messageCounter >= 20) {
+//#ifdef DEBUG
+      println(F("We lost MAVLink"));
+//#endif
       mavlink_active = 0;
       messageCounter = 0;
+      led_flash = 100;        //Fast flash
     }
-  } else {
-    waitingMAVBeats = 1;
-  }
 }
 

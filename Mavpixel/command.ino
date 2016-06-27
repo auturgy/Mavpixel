@@ -21,26 +21,6 @@
 // LED-related Cleanflight command descriptions mostly apply
 // See: https://github.com/cleanflight/cleanflight/blob/master/docs/LedStrip.md
 
-const char PROGMEM cmd_version_P[] = "version";
-const char PROGMEM cmd_quit_P[] = "quit";
-const char PROGMEM cmd_led_P[] = "led";
-const char PROGMEM cmd_color_P[] = "color";
-const char PROGMEM cmd_baud_P[] = "baud";
-const char PROGMEM cmd_soft_P[] = "softbaud";
-const char PROGMEM cmd_free_P[] = "free";
-const char PROGMEM cmd_vars_P[] = "vars";
-const char PROGMEM cmd_mode_P[] = "mode_color";
-const char PROGMEM cmd_lbv_P[] = "lowcell";
-const char PROGMEM cmd_lbp_P[] = "lowpct";
-const char PROGMEM cmd_bright_P[] = "brightness";
-const char PROGMEM cmd_anim_P[] = "animation";
-const char PROGMEM cmd_freset_P[] = "factory";
-const char PROGMEM cmd_minsats_P[] = "minsats";
-const char PROGMEM cmd_reboot_P[] = "reboot";
-const char PROGMEM cmd_help_P[] = "help";
-const char PROGMEM cmd_deadband_P[] = "deadband";
-const char PROGMEM cmd_lamptest_P[] = "lamptest";
-
 
 void enterCommandMode() {
   print(F("\r\nMavPixel " VER " ready.\r\n#"));

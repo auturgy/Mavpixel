@@ -23,12 +23,14 @@
 */
 //Mavpixel general funcion calls
 
+//Change Mavlink baud rate
 void changeBaudRate(uint32_t newBaud) {
   Serial.flush();
   Serial.begin(newBaud);
   while(Serial.available()) Serial.read();
 }
 
+//Change software serial baud rate
 #ifdef SOFTSER
 void changeSoftRate(uint32_t newBaud) {
   dbSerial.flush();
@@ -37,26 +39,65 @@ void changeSoftRate(uint32_t newBaud) {
 }
 #endif
 
-#ifdef HEARTBEAT
-void HeartBeat() {
-  c_hbMillis = millis();
-  if(c_hbMillis - p_hbMillis > d_hbMillis) 
-  {
-    // save the last time you blinked the LED 
-    p_hbMillis = c_hbMillis;   
-    // if the LED is off turn it on and vice-versa:
-      if (ledState == LOW)
-        ledState = HIGH;
-      else
-        ledState = LOW;
-    // set the LED with the ledState of the variable:
-    digitalWrite(ledPin, ledState); 
-    messageCounter++;   
+//Check incoming characters for 3xCRLF and start CLI (return true) if found
+// Software serial CLI waits forever.
+// Mavlink CLI times out after 20 seconds and is disabled if Mavlink is detected. 
+boolean countCrLf(uint8_t c) {
+    /* allow CLI to be started by hitting enter 3 times, if no
+     heartbeat packets have been received */
+#ifndef SOFTSER
+  if (mavlink_active == 0 && cli_active == 0 && millis() < 20000) {
+#else
+  if (cli_active == 0) {
+#endif
+      if (c == '\n') {
+          crlf_count++;
+      } else if (c != '\r') {
+          crlf_count = 0;
+      }
+      if (crlf_count > 2) {
+        cli_active = true;
+        crlf_count = 0;
+        enterCommandMode();
+        cmdLen = 0;
+        cmdBuffer[0] = 0;
+        return true;
+      }
   }
+  return false;
 }
-#endif 
 
- 
+//Accumulate characters into a 32-byte command buffer
+// Dispatches command to CLI on <Enter> found
+// handles backspace key, provides remote echo
+void CLIchar(uint8_t c) {
+   if (c == '\n') {
+     //got a full buffer
+     println();
+     doCommand();
+     print(F("#"));
+     cmdLen = 0;
+     cmdBuffer[0] = 0;
+   } else {
+     //Add character to buffer
+     if (cmdLen < 31) {
+       if (c == 8) {              //Backspace
+         if (cmdLen > 0) {
+           cmdLen--;
+           cmdBuffer[cmdLen] = 0;
+           print((char)c);      //Echo 
+         }
+       }
+       else {
+         cmdBuffer[cmdLen] = c;
+         cmdBuffer[cmdLen + 1] = 0;
+         cmdLen++;
+         print((char)c);      //Echo 
+       }
+     }
+   }
+}
+
 // Our generic flight modes for ArduCopter & ArduPlane
 void CheckFlightMode() {
   if(apm_mav_type == 2) { // ArduCopter MultiRotor or ArduCopter Heli
@@ -93,7 +134,24 @@ void CheckFlightMode() {
     if(iob_mode == 8) {flMode = ATUN;}   // Autotune
   }
 }
-  
+
+//Onboard blinky  
+void ledFlasher() {
+  uint32_t timer = millis();
+  if (timer - p_led > led_flash)
+  {
+    // save the last time you blinked the LED 
+    p_led = timer;
+    // if the LED is off turn it on and vice-versa:
+    if (ledState == LOW)
+      ledState = HIGH;
+    else
+      ledState = LOW;
+    // set the LED with the ledState of the variable:
+    digitalWrite(ledPin, ledState);   
+  }
+}
+
 // Checking if BIT is active in PARAM, return true if it is, false if not
 byte isBit(byte param, byte bitfield) {
  if((param & bitfield) == bitfield) return 1;
@@ -107,6 +165,7 @@ void softwareReboot()
   asm volatile (" jmp (30720)");
 }
 
+//Dump Mavlink vars
 #ifdef DUMPVARS
 void dumpVars() {
  print(F("Sats:"));
