@@ -145,3 +145,61 @@ boolean checkEeprom() {
   }
 }
 
+//Parameter setters
+
+//Brightness
+void setBrightPct(uint8_t percentage) {
+  stripBright = (float)percentage * 2.55f + 0.5f;
+  setBrightness(stripBright);
+  writeEEPROM(STRIP_BRIGHT, stripBright);
+}
+
+//Low cell voltage
+void setLowBattVolt(float voltage) {
+  lowBattVolt = voltage;
+  writeEP16(LOWBATT_VOLT, voltage * 1000);
+}
+
+//Low battery percentage
+void setLowBattPct(uint8_t percentage) {
+  lowBattPct = percentage;
+  writeEEPROM(LOWBATT_PCT, percentage);
+}
+
+//Minimum visible satellites
+void setMinSats(uint8_t satellites) {
+  minSats = satellites;
+  writeEEPROM(MIN_SATS, satellites);
+}
+
+//Indicator deadband
+void setDeadband(int microseconds) {
+  deadBand = microseconds;
+  writeEEPROM(DEADBAND, microseconds);
+}
+
+//LED strip animation
+#ifdef USE_LED_ANIMATION
+void setStripAnim(boolean enable) {
+  stripAnim = enable;
+  writeEEPROM(STRIP_ANIM, stripAnim);
+}
+#endif
+
+//Mavlink baud rate
+void setBaud(uint32_t baud) {
+  if (baud > 115200) baud = 115200;      //sensible maximum
+  writeEP16(MAVLINK_BAUD, baud / 10);
+  changeBaudRate(baud);
+}
+
+//Softserial baud rate
+#ifdef SOFTSER
+void setSoftbaud(uint32_t baud) {
+  if (baud > 38400) baud = 38400;      //maximum speed softser can handle
+  writeEP16(SOFTSER_BAUD, baud / 10);
+  changeSoftRate(baud);
+}
+#endif
+
+

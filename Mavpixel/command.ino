@@ -161,8 +161,7 @@ void doCommand() {
     if (strncmp_P(cmdBuffer, cmd_lbv_P, got) == 0) {
       if (arg) {
         float val = stof(arg);
-        lowBattVolt = val;
-        writeEP16(LOWBATT_VOLT, val * 1000);
+        setLowBattVolt(val);
       } else {
         print(F("Low cell: "));
         print(lowBattVolt);
@@ -176,8 +175,7 @@ void doCommand() {
       if (arg) {
         int val = getNumericArg(arg, 100);
         if (val < 0) return;
-        lowBattPct = val;
-        writeEEPROM(LOWBATT_PCT, val);
+        setLowBattPct(val);
       } else {
         print(F("Low pct: "));
         print(lowBattPct);
@@ -191,8 +189,7 @@ void doCommand() {
       if (arg) {
         int val = getNumericArg(arg, 100);
         if (val < 0) return;
-        minSats = val;
-        writeEEPROM(MIN_SATS, val);
+        setMinSats(val);
       } else {
         print(F("Min sats: "));
         println(minSats);
@@ -205,9 +202,7 @@ void doCommand() {
       if (arg) {
         int val = getNumericArg(arg, 100);
         if (val < 0) return;
-        stripBright = (float)val * 2.55f + 0.5f;
-        setBrightness(stripBright);
-        writeEEPROM(STRIP_BRIGHT, stripBright);
+        setBrightPct(val);
       } else {
         print(F("Brightness: "));
         print((uint8_t)((float)stripBright / 2.55f));
@@ -221,8 +216,7 @@ void doCommand() {
       if (arg) {
         int val = getNumericArg(arg, 255);
         if (val < 0) return;
-        deadBand = val;
-        writeEEPROM(DEADBAND, deadBand);
+        setDeadband(val);
       } else {
         print(F("Deadband: "));
         println(deadBand);
@@ -248,8 +242,7 @@ void doCommand() {
     //(animation) LED strip disarmed animation
     if (strncmp_P(cmdBuffer, cmd_anim_P, got) == 0) {
       if (arg) {
-        stripAnim = (strstr(arg, "y") || strstr(arg, "Y"));
-        writeEEPROM(STRIP_ANIM, stripAnim);
+        setStripAnim((strstr(arg, "y") || strstr(arg, "Y")) > 0);
       } else {
         print(F("Animation: "));
         if (stripAnim) println(F("YES")); 
@@ -280,10 +273,7 @@ void doCommand() {
     if (strncmp_P(cmdBuffer, cmd_baud_P, got) == 0) {
       if (arg) {
         uint32_t val = atol(arg);
-        if (val > 0) {
-          writeEP16(MAVLINK_BAUD, val / 10);
-          changeBaudRate(val);
-        }
+        if (val > 0) setBaud(val);
       } else {
         print(F("Baud: "));
         println((uint32_t)readEP16(MAVLINK_BAUD) * 10);
@@ -296,11 +286,7 @@ void doCommand() {
       if (arg) {
 #ifdef SOFTSER
         uint32_t val = atol(arg);
-        if (val > 0) {
-          if (val > 38400) val = 38400;      //maximum speed softser can handle
-          writeEP16(SOFTSER_BAUD, val / 10);
-          changeSoftRate(val);
-        }
+        if (val > 0) setSoftbaud(val);
 #endif
       } else {
         print(F("Soft: "));

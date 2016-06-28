@@ -73,7 +73,8 @@ typedef enum {
     LED_FUNCTION_ARM_STATE | \
     LED_FUNCTION_THROTTLE | \
     LED_FUNCTION_THRUST_RING | \
-    LED_FUNCTION_COLOR \
+    LED_FUNCTION_COLOR | \
+    LED_FUNCTION_GPS \
 )
 
 typedef enum {

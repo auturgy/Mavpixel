@@ -31,7 +31,7 @@ BetterStream	*mavlink_comm_0_port;
 BetterStream	*mavlink_comm_1_port;
 
 mavlink_system_t mavlink_system = {12,160,0,0};
-uint8_t system_type = MAV_TYPE_GENERIC;    //No type for a lighting controller, use next free?
+uint8_t system_type = 18;//MAV_TYPE_GENERIC;    //No type for a lighting controller, use next free?
 //uint8_t autopilot_type = MAV_AUTOPILOT_GENERIC;
 uint8_t autopilot_type = MAV_AUTOPILOT_INVALID;
  
@@ -163,41 +163,39 @@ void read_mavlink(){
   	      apm_mav_component = msg.compid;
               apm_mav_type      = mavlink_msg_heartbeat_get_type(&msg);
   
+              //Flight mode
               iob_mode = mavlink_msg_heartbeat_get_custom_mode(&msg);
               if(iob_mode != iob_old_mode) {
                 iob_old_mode = iob_mode;
                 CheckFlightMode();
               }                
 
+              //Armed flag
               if(isBit(mavlink_msg_heartbeat_get_base_mode(&msg),MOTORS_ARMED)) {
-                if(isArmedOld == 0) {
-                    CheckFlightMode();
-                    isArmedOld = 1;
-                }    
+                if(isArmed == 0) CheckFlightMode();
                 isArmed = 1;  
-              } else {
-                isArmed = 0;
-                isArmedOld = 0;
-              }
-   
+              } 
+              else isArmed = 0;
+ 
+              //System status (starting up, failsafe)
               iob_state = mavlink_msg_heartbeat_get_system_status(&msg);
-
             }
             break;
             
           case MAVLINK_MSG_ID_SYS_STATUS:
-            { 
+            {
               iob_vbat_A = (mavlink_msg_sys_status_get_voltage_battery(&msg) / 1000.0f);
               iob_battery_remaining_A = mavlink_msg_sys_status_get_battery_remaining(&msg);
   
 #ifdef LED_STRIP
+              //Detect number of cells
               if (numCells == 0 && iob_vbat_A > 7.5) {
                 if(iob_vbat_A>21.2) numCells = 6;
                 else if(iob_vbat_A>17) numCells = 5;
                 else if(iob_vbat_A>12.8) numCells = 4;
                 else if(iob_vbat_A>7.5) numCells = 3;
               }
-              
+              //Calculate cell voltage
               if (numCells > 0) cellVoltage = iob_vbat_A / numCells;
 #endif
 
@@ -257,7 +255,7 @@ void read_mavlink(){
 	    break;
           case MAVLINK_MSG_ID_PARAM_REQUEST_READ:
 	    {
-                //Send single parameter (named parameters not supported..)
+                //Send single parameter (named parameters not supported, and not required by Mission Planner)
                 mavSendParameter(mavlink_msg_param_request_read_get_param_index(&msg));
                 //mavlink_msg_param_request_read_get_param_id(&msg, mavParamBuffer);
                 print("Parameter request for parameter ");
@@ -266,6 +264,7 @@ void read_mavlink(){
 	    break;
           case MAVLINK_MSG_ID_MISSION_REQUEST_LIST:
 	    {
+              //Tell QGroundControl there is no mission
               mavlink_msg_mission_count_send(MAVLINK_COMM_0,
                 apm_mav_system,
                 apm_mav_component,
@@ -273,6 +272,42 @@ void read_mavlink(){
                 println("Mission request.");
 	    }
 	    break;
+          case MAVLINK_MSG_ID_PARAM_SET:
+	    {
+              mavlink_param_set_t set;
+	      mavlink_msg_param_set_decode(&msg, &set);
+ 
+	      // Check if this message is for this system
+	      if (set.target_system == mavlink_system.sysid && set.target_component == mavlink_system.compid)
+              {
+                uint8_t index = 0;
+                boolean reboot = false;
+                if (strncmp_P(set.param_id, cmd_bright_P, 10) == 0) {setBrightPct(set.param_value); index = 1;}
+                else if (strncmp_P(set.param_id, cmd_anim_P, 9) == 0) {
+#ifdef USE_LED_ANIMATION
+                  setStripAnim(set.param_value); 
+#endif
+                  index = 2;
+                }
+                if (strncmp_P(set.param_id, cmd_lbv_P, 7) == 0) {setLowBattVolt(set.param_value); index = 3;}
+                if (strncmp_P(set.param_id, cmd_lbp_P, 6) == 0) {setLowBattPct(set.param_value); index = 4;}
+                if (strncmp_P(set.param_id, cmd_minsats_P, 7) == 0) {setMinSats(set.param_value); index = 5;}
+                if (strncmp_P(set.param_id, cmd_deadband_P, 8) == 0) {setDeadband(set.param_value); index = 6;}
+                if (strncmp_P(set.param_id, cmd_baud_P, 4) == 0) {setBaud(set.param_value); index = 7;}
+                if (strncmp_P(set.param_id, cmd_soft_P, 8) == 0) {setSoftbaud(set.param_value); index = 8;}
+                if (strncmp_P(set.param_id, cmd_lamptest_P, 8) == 0) {lampTest = set.param_value; index = 9;}
+                if (strncmp_P(set.param_id, cmd_freset_P, 7) == 0) {writeEEPROM(FACTORY_RESET, 1); index = 10;}
+                if (strncmp_P(set.param_id, cmd_reboot_P, 6) == 0) {reboot = true; index = 11;}
+
+
+
+
+
+                mavSendParameter(index);
+                if (reboot) softwareReboot();
+              }
+            }
+            break;
           default:
             //Do nothing
             break;
@@ -286,13 +321,17 @@ void read_mavlink(){
   }
 }
 
-//Send a single Mavlink parameter by index
 mavlink_param_union_t param;
+//Send a single Mavlink parameter by index
 void mavSendParameter(int16_t index) {
   //Basic single-value parameters
   if (index == 0) mavlinkSendParam(cmd_version_P, -1, index, mavpixelVersion);
   else if (index == 1) mavlinkSendParam(cmd_bright_P, -1, index, (uint8_t)((float)stripBright / 2.55f));
+#ifdef USE_LED_ANIMATION
   else if (index == 2) mavlinkSendParam(cmd_anim_P, -1, index, stripAnim);
+#else
+  else if (index == 2) mavlinkSendParam(cmd_anim_P, -1, index, 0);
+#endif
   else if (index == 3) mavlinkSendParam(cmd_lbv_P, -1, index, lowBattVolt);
   else if (index == 4) mavlinkSendParam(cmd_lbp_P, -1, index, lowBattPct);
   else if (index == 5) mavlinkSendParam(cmd_minsats_P, -1, index, minSats);
@@ -302,13 +341,15 @@ void mavSendParameter(int16_t index) {
   else if (index == 9) mavlinkSendParam(cmd_lamptest_P, -1, index, lampTest);
   else if (index == 10) mavlinkSendParam(cmd_freset_P, -1, index, readEEPROM(FACTORY_RESET));
   else if (index == 11) mavlinkSendParam(cmd_reboot_P, -1, index, 0);
-  //LEDs - sent as 4 byte XY(1):FLAGS(2):COLOR(1)
+  //LEDs - sent as 4 byte XY(1):COLOR(1):FLAGS(2)
   else if (index >= 12 && index < 44) 
   {
     memcpy(&param, &ledConfigs[index - 12], 4);     
     mavlinkSendParam(mav_led_P, index - 12, index, param.param_float);
   }
-  //Modes - sent as 4 byte North&low3bitsofEast:South&high2bitsofEast:West&low3bitsofUp:Down&high2bitsofUp
+  //Modes - sent as a packed 4 byte representation - limits maximum modes to 32 (5-bit)
+  // Packing: All six 5-bit color indexes in 4 bytes - 
+  // North&low3bitsofEast:South&high2bitsofEast:West&low3bitsofUp:Down&high2bitsofUp
   else if (index >= 44 && index < 65) {
     uint8_t color = index - 44;
     uint16_t c = readModeColor(color, 1);
@@ -321,14 +362,13 @@ void mavSendParameter(int16_t index) {
   }
   //Colour palette - sent as 4 byte Hue(2):Sat(1):Val(1) 
   else if (index >= 65 && index < 81) {
-    memcpy(&param, colors[index - 65], 3);
-    param.bytes[4] = 0;
+    memcpy(&param, colors[index - 65], 4);
     mavlinkSendParam(mav_color_P, index - 65, index, param.param_float);
   }
 }
 
 //Send a parameter given a name, index and value
-// if provided a non-negative nameIndex, append to name and send as uint32 rather than float
+// if provided a non-negative nameIndex, append _<index> to name and send as uint32 rather than float
 void mavlinkSendParam(const prog_char name_P[], int nameIndex, int index, float value) {
      strcpy_P(mavParamBuffer, name_P);
      if (nameIndex >= 0) itoa(nameIndex, mavParamBuffer + strlen_P(name_P), 10);

@@ -133,7 +133,6 @@ char mavParamBuffer[MAVLINK_MSG_PARAM_SET_FIELD_PARAM_ID_LEN];
 // General states
 byte flMode;          // Our current flight mode as defined
 byte isArmed = 0;     // Is motors armed flag
-byte isArmedOld = 0;  // Earlier Armed status flag
 static uint8_t crlf_count = 0;
 
 //LED Strip vars
