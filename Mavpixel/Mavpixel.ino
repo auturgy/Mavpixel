@@ -185,6 +185,7 @@ void setup()
   stripAnim = readEEPROM(STRIP_ANIM);
   minSats = readEEPROM(MIN_SATS);
   deadBand = readEEPROM(DEADBAND);
+  mySysId = readEEPROM(SYS_ID);
   readStruct(LED_CONFIGS, (uint8_t*)ledConfigs, sizeof(ledConfigs));
   readColorConfigs();
   //Start the strip

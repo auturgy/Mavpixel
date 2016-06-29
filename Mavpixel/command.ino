@@ -93,6 +93,18 @@ void doCommand() {
        return;
     }
 
+    //(sysid) Mavlink system id
+    if (strncmp_P(cmdBuffer, cmd_sysid_P, got) == 0) {
+      if (arg) {
+        int val = atoi(arg);
+        setSysid(val);
+      } else {
+        print(F("Sysid: "));
+        println(mySysId);
+      }
+      return;
+    }
+    
 #ifdef membug
     //(f) Free RAM.
     if (strncmp_P(cmdBuffer, cmd_free_P, got) == 0) {
@@ -319,6 +331,7 @@ void doCommand() {
     if (strncmp_P(cmdBuffer, cmd_help_P, got) == 0) {
       println( F("List of commands:\r\n" 
       "version   \tMavPixel firmware version\r\n" 
+      "sysid     \tMavlink system id\r\n" 
 #ifdef LED_STRIP
       "led       \tConfigure LEDs\r\n" 
       "color     \tConfigure colours\r\n" 

@@ -34,6 +34,7 @@
 #define SOFTSER_BAUD  143  //16 bit
 #define MIN_SATS      145
 #define DEADBAND      146
+#define SYS_ID        147
 
 // Internal version, check placeholders
 #define VERMAJ 252

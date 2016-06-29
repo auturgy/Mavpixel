@@ -59,6 +59,7 @@
 
 //Command/parameter string defs
 const char PROGMEM cmd_version_P[] = "version";
+const char PROGMEM cmd_sysid_P[] = "sysid";
 const char PROGMEM cmd_quit_P[] = "quit";
 const char PROGMEM cmd_led_P[] = "led";
 const char PROGMEM cmd_color_P[] = "color";
@@ -85,7 +86,7 @@ const char PROGMEM mav_color_P[] = "color_";
 // MAVLink HeartBeat bits
 #define MOTORS_ARMED 128
 
-#define ONBOARD_PARAM_COUNT 81//;44
+#define ONBOARD_PARAM_COUNT 82
 ///////////////////////////
 // Global variables
 
@@ -134,6 +135,7 @@ char mavParamBuffer[MAVLINK_MSG_PARAM_SET_FIELD_PARAM_ID_LEN];
 byte flMode;          // Our current flight mode as defined
 byte isArmed = 0;     // Is motors armed flag
 static uint8_t crlf_count = 0;
+uint8_t mySysId;
 
 //LED Strip vars
 #ifdef LED_STRIP

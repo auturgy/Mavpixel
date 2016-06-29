@@ -115,6 +115,7 @@ void writeFactorySettings() {
  writeEP16(SOFTSER_BAUD, 240);  // b/10
  writeEEPROM(MIN_SATS, 6);
  writeEEPROM(DEADBAND, 40);
+ writeEEPROM(SYS_ID, 0);
 
  // Write details for versioncheck to EEPROM
  writeEEPROM(VERMIN, CHKMIN);
@@ -202,4 +203,9 @@ void setSoftbaud(uint32_t baud) {
 }
 #endif
 
+//Mavlink system id
+void setSysid(uint8_t sysid) {
+  mySysId = sysid;
+  writeEEPROM(SYS_ID, sysid);
+}
 
