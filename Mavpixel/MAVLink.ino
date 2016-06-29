@@ -409,17 +409,17 @@ void mavSendParameter(int16_t index) {
   else if (index >= 14 && index < 46) 
   {
 #ifdef LED_STRIP
-    memcpy(&param, &ledConfigs[index - 13], 4);     
-    mavlinkSendParam(mav_led_P, index - 13, index, param.param_float);
+    memcpy(&param, &ledConfigs[index - 14], 4);     
+    mavlinkSendParam(mav_led_P, index - 14, index, param.param_float);
 #else
-    mavlinkSendParam(mav_led_P, index - 13, index, 0);
+    mavlinkSendParam(mav_led_P, index - 14, index, 0);
 #endif
   }
   //Modes - sent as a packed 4 byte representation - limits maximum modes to 32 (5-bit)
   // Packing: All six 5-bit color indexes in 4 bytes - 
   // North&low3bitsofEast:South&high2bitsofEast:West&low3bitsofUp:Down&high2bitsofUp
   else if (index >= 46 && index < 67) {
-    uint8_t color = index - 45;
+    uint8_t color = index - 46;
 #ifdef LED_STRIP
     uint16_t c = readModeColor(color, 1);
     param.bytes[0] = readModeColor(color, 0) + ((c << 5) & 0b11100000);
@@ -435,10 +435,10 @@ void mavSendParameter(int16_t index) {
   //Colour palette - sent as 4 byte Hue(2):Sat(1):Val(1) 
   else if (index >= 67 && index < 83) {
 #ifdef LED_STRIP
-    memcpy(&param, colors[index - 66], 4);
-    mavlinkSendParam(mav_color_P, index - 66, index, param.param_float);
+    memcpy(&param, colors[index - 67], 4);
+    mavlinkSendParam(mav_color_P, index - 67, index, param.param_float);
 #else
-    mavlinkSendParam(mav_color_P, index - 66, index, 0);
+    mavlinkSendParam(mav_color_P, index - 67, index, 0);
 #endif
   }
 }
