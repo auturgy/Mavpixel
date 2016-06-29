@@ -66,17 +66,18 @@ Derived from: jD-IOBoard_MAVlink Driver
 #undef PSTR 
 #define PSTR(s) (__extension__({static prog_char __c[] PROGMEM = (s); &__c[0];})) 
 
-#define MAVLINK10     // Are we listening MAVLink 1.0 or 0.9   (0.9 is obsolete now)
+//Compilation switches
+#define MAVLINK10     // (Leave this as is!) Are we listening MAVLink 1.0 or 0.9   (0.9 is obsolete now)
 #define HEARTBEAT     // HeartBeat signal
 #define RATEREQ       //Send stream rate requests
 #define SOFTSER       //Use SoftwareSerial as configuration port
-//#define DEBUG         //Output extra debug information 
-#define membug        //Check memory usage
-//#define DUMPVARS      //adds CLI command to dump mavlink variables 
-#define LED_STRIP
-#define USE_LED_GPS
-#define USE_LED_ANIMATION
-#define LAMPTEST
+//#define DEBUG             //Output extra debug information 
+#define membug            //Check memory usage
+//#define DUMPVARS          //adds CLI command to dump mavlink variables 
+#define LED_STRIP         //Can compile without LED controller if desired
+#define USE_LED_GPS       //Include LED GPS function
+#define USE_LED_ANIMATION //Include LED animation while disarmed effect
+#define USE_LAMPTEST      //adds command to provide test pattern on LEDs
 
 /* **********************************************/
 /* ***************** INCLUDES *******************/
@@ -122,7 +123,7 @@ Derived from: jD-IOBoard_MAVlink Driver
 #define CHKMAJ 2    // Major version number to check from EEPROM
 #define CHKMIN 0    // Minor version number to check from EEPROM
 float mavpixelVersion = CHKMAJ + (float)(CHKMIN / 10);
-#define ledPin 13     // Heartbeat LED if any
+#define ledPin 13     // Blinky LED if any
 
 //Main loop controls
 int messageCounter;
@@ -172,9 +173,10 @@ void setup()
   dbSerial.begin((uint32_t)readEP16(SOFTSER_BAUD) * 10);                    
 #endif
 
+  //print & println functions ready
   println(F("\r\nMavpixel " VER " initialised."));
   if (eeReset) println(F("Factory Reset."));
-  // setup mavlink port
+  // setup mavlink port (just one)
   mavlink_comm_0_port = &Serial;
 
 #ifdef LED_STRIP
@@ -186,7 +188,7 @@ void setup()
   minSats = readEEPROM(MIN_SATS);
   deadBand = readEEPROM(DEADBAND);
   mySysId = readEEPROM(SYS_ID);
-  heartBeat = readEEPROM(HEARTBEAT);
+  heartBeat = readEEPROM(HEARTBEAT_EN);
   readStruct(LED_CONFIGS, (uint8_t*)ledConfigs, sizeof(ledConfigs));
   readColorConfigs();
   //Start the strip

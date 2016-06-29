@@ -141,7 +141,7 @@ void ledFlasher() {
   if (timer - p_led > led_flash)
   {
     // save the last time you blinked the LED 
-    p_led = timer;
+    p_led += led_flash;
     // if the LED is off turn it on and vice-versa:
     if (ledState == LOW)
       ledState = HIGH;

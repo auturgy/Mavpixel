@@ -149,6 +149,7 @@ boolean checkEeprom() {
 
 //Parameter setters
 
+#ifdef LED_STRIP
 //Brightness
 void setBrightPct(uint8_t percentage) {
   stripBright = (float)percentage * 2.55f + 0.5f;
@@ -186,6 +187,7 @@ void setStripAnim(boolean enable) {
   stripAnim = enable;
   writeEEPROM(STRIP_ANIM, stripAnim);
 }
+#endif
 #endif
 
 //Mavlink baud rate

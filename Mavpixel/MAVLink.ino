@@ -51,7 +51,7 @@ void HeartBeat() {
   uint32_t timer = millis();
   if(timer - hbMillis > hbTimer) 
   {
-    hbMillis = timer;
+    hbMillis += hbTimer;
 #ifdef HEARTBEAT
 #ifndef SOFTSER  //Active CLI on telemetry port pauses mavlink
     if (!cli_active && heartBeat) {
@@ -87,7 +87,7 @@ void mavStreamRequest() {
 void mavSendData() {
   uint32_t timer = millis();
   if(timer - parMillis > parTimer) {
-    parMillis = timer;
+    parMillis += parTimer;
     //send parameters one by one
     if (m_parameter_i < ONBOARD_PARAM_COUNT) {
       mavSendParameter(m_parameter_i);
@@ -281,20 +281,29 @@ void read_mavlink(){
                 //Standard parameters
                 if (strncmp_P(set.param_id, cmd_sysid_P, 5) == 0) {setSysid(set.param_value); index = 1;}
                 if (strncmp_P(set.param_id, cmd_heart_P, 9) == 0) {setHeartbeat(set.param_value); index = 2;}
+#ifdef LED_STRIP                
                 else if (strncmp_P(set.param_id, cmd_bright_P, 10) == 0) {setBrightPct(set.param_value); index = 3;}
-                else if (strncmp_P(set.param_id, cmd_anim_P, 9) == 0) {
+                else if (strncmp_P(set.param_id, cmd_anim_P, 9) == 0) {index = 4;
 #ifdef USE_LED_ANIMATION
                   setStripAnim(set.param_value); 
 #endif
-                  index = 4;
                 }
                 else if (strncmp_P(set.param_id, cmd_lbv_P, 7) == 0) {setLowBattVolt(set.param_value); index = 5;}
                 else if (strncmp_P(set.param_id, cmd_lbp_P, 6) == 0) {setLowBattPct(set.param_value); index = 6;}
                 else if (strncmp_P(set.param_id, cmd_minsats_P, 7) == 0) {setMinSats(set.param_value); index = 7;}
                 else if (strncmp_P(set.param_id, cmd_deadband_P, 8) == 0) {setDeadband(set.param_value); index = 8;}
+                else if (strncmp_P(set.param_id, cmd_lamptest_P, 8) == 0) {lampTest = set.param_value; index = 11;}
+#else
+                else if (strncmp_P(set.param_id, cmd_bright_P, 10) == 0) index = 3;
+                else if (strncmp_P(set.param_id, cmd_anim_P, 9) == 0) index = 4;
+                else if (strncmp_P(set.param_id, cmd_lbv_P, 7) == 0) index = 5;
+                else if (strncmp_P(set.param_id, cmd_lbp_P, 6) == 0) index = 6;
+                else if (strncmp_P(set.param_id, cmd_minsats_P, 7) == 0) index = 7;
+                else if (strncmp_P(set.param_id, cmd_deadband_P, 8) == 0) index = 8;
+                else if (strncmp_P(set.param_id, cmd_lamptest_P, 8) == 0) index = 11;
+#endif
                 else if (strncmp_P(set.param_id, cmd_baud_P, 4) == 0) {setBaud(set.param_value); index = 9;}
                 else if (strncmp_P(set.param_id, cmd_soft_P, 8) == 0) {setSoftbaud(set.param_value); index = 10;}
-                else if (strncmp_P(set.param_id, cmd_lamptest_P, 8) == 0) {lampTest = set.param_value; index = 11;}
                 else if (strncmp_P(set.param_id, cmd_freset_P, 7) == 0) {writeEEPROM(FACTORY_RESET, 1); index = 12;}
                 else if (strncmp_P(set.param_id, cmd_reboot_P, 6) == 0) {reboot = true; index = 13;}
                 //LED parameters
@@ -302,9 +311,10 @@ void read_mavlink(){
                   char* arg = strstr(cmdBuffer, "_");
                   if (arg > 0) {
                     index = atoi(arg + 1);
-                    //param.param_float = set.param_value;
+#ifdef LED_STRIP
                     memcpy(&ledConfigs[index], &param, 4);
                     writeLedConfig(index, &ledConfigs[index]);
+#endif
                     index += 14;
                   }
                 }
@@ -313,6 +323,7 @@ void read_mavlink(){
                   char* arg = strstr(cmdBuffer, "_");
                   if (arg > 0) {
                     index = atoi(arg + 1);
+#ifdef LED_STRIP
                     param.param_float = set.param_value;
                     writeModeColor(index, 0, param.bytes[0] & 0b00011111);
                     writeModeColor(index, 1, ((param.bytes[0] & 0b11100000) >> 5) + ((param.bytes[1] & 0b11100000) >> 2));
@@ -320,6 +331,7 @@ void read_mavlink(){
                     writeModeColor(index, 3, param.bytes[2] & 0b00011111);
                     writeModeColor(index, 4, ((param.bytes[2] & 0b11100000) >> 5) + ((param.bytes[3] & 0b11100000) >> 2));
                     writeModeColor(index, 5, param.bytes[3] & 0b00011111);
+#endif
                     index += 46;
                   }
                 }
@@ -328,8 +340,10 @@ void read_mavlink(){
                   char* arg = strstr(cmdBuffer, "_");
                   if (arg > 0) {
                     index = atoi(arg + 1);
+#ifdef LED_STRIP
                     memcpy(colors[index], &param, 4);
                     writeColorConfig(index, colors[index]);
+#endif
                     index += 67;
                   }
                 }
@@ -366,6 +380,7 @@ void mavSendParameter(int16_t index) {
   if (index == 0) mavlinkSendParam(cmd_version_P, -1, index, mavpixelVersion);
   else if (index == 1) mavlinkSendParam(cmd_sysid_P, -1, index, mySysId);
   else if (index == 2) mavlinkSendParam(cmd_heart_P, -1, index, heartBeat);
+#ifdef LED_STRIP
   else if (index == 3) mavlinkSendParam(cmd_bright_P, -1, index, (uint8_t)((float)stripBright / 2.55f));
 #ifdef USE_LED_ANIMATION
   else if (index == 4) mavlinkSendParam(cmd_anim_P, -1, index, stripAnim);
@@ -376,22 +391,36 @@ void mavSendParameter(int16_t index) {
   else if (index == 6) mavlinkSendParam(cmd_lbp_P, -1, index, lowBattPct);
   else if (index == 7) mavlinkSendParam(cmd_minsats_P, -1, index, minSats);
   else if (index == 8) mavlinkSendParam(cmd_deadband_P, -1, index, deadBand);
+  else if (index == 11) mavlinkSendParam(cmd_lamptest_P, -1, index, lampTest);
+#else
+  else if (index == 3) mavlinkSendParam(cmd_bright_P, -1, index, 0);
+  else if (index == 4) mavlinkSendParam(cmd_anim_P, -1, index, 0);
+  else if (index == 5) mavlinkSendParam(cmd_lbv_P, -1, index, 0);
+  else if (index == 6) mavlinkSendParam(cmd_lbp_P, -1, index, 0);
+  else if (index == 7) mavlinkSendParam(cmd_minsats_P, -1, index, 0);
+  else if (index == 8) mavlinkSendParam(cmd_deadband_P, -1, index, 0);
+  else if (index == 11) mavlinkSendParam(cmd_lamptest_P, -1, index, 0);
+#endif
   else if (index == 9) mavlinkSendParam(cmd_baud_P, -1, index, (uint32_t)readEP16(MAVLINK_BAUD) * 10);
   else if (index == 10) mavlinkSendParam(cmd_soft_P, -1, index, (uint32_t)readEP16(SOFTSER_BAUD) * 10);
-  else if (index == 11) mavlinkSendParam(cmd_lamptest_P, -1, index, lampTest);
   else if (index == 12) mavlinkSendParam(cmd_freset_P, -1, index, readEEPROM(FACTORY_RESET));
   else if (index == 13) mavlinkSendParam(cmd_reboot_P, -1, index, 0);
   //LEDs - sent as 4 byte XY(1):COLOR(1):FLAGS(2)
   else if (index >= 14 && index < 46) 
   {
+#ifdef LED_STRIP
     memcpy(&param, &ledConfigs[index - 13], 4);     
     mavlinkSendParam(mav_led_P, index - 13, index, param.param_float);
+#else
+    mavlinkSendParam(mav_led_P, index - 13, index, 0);
+#endif
   }
   //Modes - sent as a packed 4 byte representation - limits maximum modes to 32 (5-bit)
   // Packing: All six 5-bit color indexes in 4 bytes - 
   // North&low3bitsofEast:South&high2bitsofEast:West&low3bitsofUp:Down&high2bitsofUp
   else if (index >= 46 && index < 67) {
     uint8_t color = index - 45;
+#ifdef LED_STRIP
     uint16_t c = readModeColor(color, 1);
     param.bytes[0] = readModeColor(color, 0) + ((c << 5) & 0b11100000);
     param.bytes[1] = readModeColor(color, 2) + ((c << 2) & 0b11100000);
@@ -399,11 +428,18 @@ void mavSendParameter(int16_t index) {
     param.bytes[2] = readModeColor(color, 3) + ((c << 5) & 0b11100000);
     param.bytes[3] = readModeColor(color, 5) + ((c << 2) & 0b11100000);
     mavlinkSendParam(mav_mode_P, color, index, param.param_float);
+#else
+    mavlinkSendParam(mav_mode_P, color, index, 0);
+#endif
   }
   //Colour palette - sent as 4 byte Hue(2):Sat(1):Val(1) 
   else if (index >= 67 && index < 83) {
+#ifdef LED_STRIP
     memcpy(&param, colors[index - 66], 4);
     mavlinkSendParam(mav_color_P, index - 66, index, param.param_float);
+#else
+    mavlinkSendParam(mav_color_P, index - 66, index, 0);
+#endif
   }
 }
 

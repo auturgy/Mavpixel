@@ -92,16 +92,16 @@ const char PROGMEM mav_color_P[] = "color_";
 // Global variables
 
 // Counters and millisecond placeholders used around the code
-static uint32_t hbMillis;                         // HeartBeat timer
-static uint32_t hbTimer = 500;
+static uint32_t hbMillis = millis();            // HeartBeat timer
+static uint32_t hbTimer = 500;                  //2hz
 
 //Parameter send timer
-static uint32_t parMillis;                         // Parameter timer
-static uint32_t parTimer = 50;
+static uint32_t parMillis = millis();           // Parameter timer
+static uint32_t parTimer = 50;                  //20hz
 
 //Led timer
-static uint32_t led_flash = 500;
-static uint32_t p_led;
+static uint32_t p_led = millis();               // Blinky led startup timer
+static uint32_t led_flash = 500;                //Gets changed in code to alter blink rate
 
 static float    iob_vbat_A = 0;                 // Battery A voltage in milivolt
 static uint16_t iob_battery_remaining_A = 0;    // 0 to 100 <=> 0 to 1000
@@ -119,6 +119,7 @@ static int16_t   iob_chan2 = 1500;              //Pitch
 static uint16_t  iob_throttle = 0;               // throtle
 
 //MAVLink session control
+boolean heartBeat;
 static uint8_t  apm_mav_type;
 static uint8_t  apm_mav_system; 
 static uint8_t  apm_mav_component;
@@ -149,6 +150,5 @@ boolean stripAnim;
 uint8_t minSats;
 uint8_t deadBand;
 uint8_t lampTest;
-boolean heartBeat;
 #endif
 

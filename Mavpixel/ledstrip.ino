@@ -31,7 +31,7 @@
 #ifdef USE_LED_ANIMATION
 static uint32_t nextAnimationUpdateAt = 0;
 #endif
-#ifdef LAMPTEST
+#ifdef USE_LAMPTEST
 static uint32_t nextLampTestUpdateAt = 0;
 #endif
 static uint32_t nextIndicatorFlashAt = 0;
@@ -852,7 +852,7 @@ void updateLedStrip(void)
 
     uint32_t now = millis();
 
-#ifdef LAMPTEST
+#ifdef USE_LAMPTEST
     if (lampTest) {
       if (now > nextLampTestUpdateAt) {
         nextLampTestUpdateAt = now + LED_STRIP_20HZ;

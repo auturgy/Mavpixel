@@ -169,7 +169,7 @@ void show() {
   strip[3]->show();
 }
 
-#ifdef LAMPTEST
+#ifdef USE_LAMPTEST
 void rainbowCycle() {
   static uint16_t j = 0;
   hsvColor_t c;

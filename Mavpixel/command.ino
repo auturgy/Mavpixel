@@ -248,7 +248,7 @@ void doCommand() {
       return;
     }
 
-#ifdef LAMPTEST
+#ifdef USE_LAMPTEST
     //(lamptest)Lamptest function
     if (strncmp_P(cmdBuffer, cmd_lamptest_P, got) == 0) {
       if (arg) {
@@ -357,7 +357,7 @@ void doCommand() {
       "lowpct    \tLow battery percentage\r\n"
       "minsats   \tMinimum visible satellites\r\n"
       "deadband  \tStick center deadband\r\n" 
-#ifdef LAMPTEST
+#ifdef USE_LAMPTEST
       "lamptest  \tShow test pattern\r\n" 
 #endif
 #endif
