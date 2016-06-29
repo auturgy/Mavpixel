@@ -35,7 +35,7 @@
 #define MIN_SATS      145
 #define DEADBAND      146
 #define SYS_ID        147
-#define HEARTBEAT     148
+#define HEARTBEAT_EN  148
 
 // Internal version, check placeholders
 #define VERMAJ 252
