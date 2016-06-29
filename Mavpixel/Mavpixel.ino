@@ -186,6 +186,7 @@ void setup()
   minSats = readEEPROM(MIN_SATS);
   deadBand = readEEPROM(DEADBAND);
   mySysId = readEEPROM(SYS_ID);
+  heartBeat = readEEPROM(HEARTBEAT);
   readStruct(LED_CONFIGS, (uint8_t*)ledConfigs, sizeof(ledConfigs));
   readColorConfigs();
   //Start the strip
@@ -249,7 +250,6 @@ void loop()
 #else
     if(!mavlink_active && messageCounter >= 10) {
 #endif
-println(F("Requesting rates.."));
       enable_mav_request = 3;//1; //Three times to certify it will be readed
       messageCounter = 0;
     } 
@@ -257,9 +257,9 @@ println(F("Requesting rates.."));
 
     //Check for Mavlink lost
     if(mavlink_active && messageCounter >= 20) {
-//#ifdef DEBUG
+#ifdef DEBUG
       println(F("We lost MAVLink"));
-//#endif
+#endif
       mavlink_active = 0;
       messageCounter = 0;
       led_flash = 100;        //Fast flash

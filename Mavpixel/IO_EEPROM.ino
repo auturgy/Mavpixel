@@ -116,6 +116,7 @@ void writeFactorySettings() {
  writeEEPROM(MIN_SATS, 6);
  writeEEPROM(DEADBAND, 40);
  writeEEPROM(SYS_ID, 0);
+ writeEEPROM(HEARTBEAT, 0);
 
  // Write details for versioncheck to EEPROM
  writeEEPROM(VERMIN, CHKMIN);
@@ -207,5 +208,11 @@ void setSoftbaud(uint32_t baud) {
 void setSysid(uint8_t sysid) {
   mySysId = sysid;
   writeEEPROM(SYS_ID, sysid);
+}
+
+//Heartbeat enabled
+void setHeartbeat(boolean beating) {
+  heartBeat = beating;
+  writeEEPROM(HEARTBEAT, beating);
 }
 

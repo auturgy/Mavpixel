@@ -105,6 +105,18 @@ void doCommand() {
       return;
     }
     
+    //(heartbeat) Mavlink heartbeat
+    if (strncmp_P(cmdBuffer, cmd_heart_P, got) == 0) {
+      if (arg) {
+        setHeartbeat((strstr(arg, "y") || strstr(arg, "Y")) > 0);
+      } else {
+        print(F("Heartbeat: "));
+        if (heartBeat) println(F("YES")); 
+        else println(F("NO"));
+      }
+      return;
+    }    
+
 #ifdef membug
     //(f) Free RAM.
     if (strncmp_P(cmdBuffer, cmd_free_P, got) == 0) {
@@ -332,6 +344,7 @@ void doCommand() {
       println( F("List of commands:\r\n" 
       "version   \tMavPixel firmware version\r\n" 
       "sysid     \tMavlink system id\r\n" 
+      "heartbeat \tEmit Mavlink heartbeats\r\n" 
 #ifdef LED_STRIP
       "led       \tConfigure LEDs\r\n" 
       "color     \tConfigure colours\r\n" 

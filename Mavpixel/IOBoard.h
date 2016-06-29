@@ -60,6 +60,7 @@
 //Command/parameter string defs
 const char PROGMEM cmd_version_P[] = "version";
 const char PROGMEM cmd_sysid_P[] = "sysid";
+const char PROGMEM cmd_heart_P[] = "heartbeat";
 const char PROGMEM cmd_quit_P[] = "quit";
 const char PROGMEM cmd_led_P[] = "led";
 const char PROGMEM cmd_color_P[] = "color";
@@ -86,7 +87,7 @@ const char PROGMEM mav_color_P[] = "color_";
 // MAVLink HeartBeat bits
 #define MOTORS_ARMED 128
 
-#define ONBOARD_PARAM_COUNT 82
+#define ONBOARD_PARAM_COUNT 83
 ///////////////////////////
 // Global variables
 
@@ -148,5 +149,6 @@ boolean stripAnim;
 uint8_t minSats;
 uint8_t deadBand;
 uint8_t lampTest;
+boolean heartBeat;
 #endif
 
