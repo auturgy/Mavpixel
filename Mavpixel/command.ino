@@ -100,7 +100,7 @@ void doCommand() {
         setSysid(val);
       } else {
         print(F("Sysid: "));
-        println(mySysId);
+        println(mavlink_system.sysid);
       }
       return;
     }

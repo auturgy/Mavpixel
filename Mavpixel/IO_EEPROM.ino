@@ -208,7 +208,7 @@ void setSoftbaud(uint32_t baud) {
 
 //Mavlink system id
 void setSysid(uint8_t sysid) {
-  mySysId = sysid;
+  mavlink_system.sysid = sysid;
   writeEEPROM(SYS_ID, sysid);
 }
 

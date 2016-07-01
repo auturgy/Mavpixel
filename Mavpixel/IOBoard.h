@@ -119,6 +119,7 @@ static int16_t   iob_chan2 = 1500;              //Pitch
 static uint16_t  iob_throttle = 0;               // throtle
 
 //MAVLink session control
+mavlink_system_t mavlink_system = {12,160,0,0};
 boolean heartBeat;
 static uint8_t  apm_mav_type;
 static uint8_t  apm_mav_system; 
@@ -137,7 +138,6 @@ char mavParamBuffer[MAVLINK_MSG_PARAM_SET_FIELD_PARAM_ID_LEN];
 byte flMode;          // Our current flight mode as defined
 byte isArmed = 0;     // Is motors armed flag
 static uint8_t crlf_count = 0;
-uint8_t mySysId;
 
 //LED Strip vars
 #ifdef LED_STRIP

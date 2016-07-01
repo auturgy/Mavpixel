@@ -187,7 +187,7 @@ void setup()
   stripAnim = readEEPROM(STRIP_ANIM);
   minSats = readEEPROM(MIN_SATS);
   deadBand = readEEPROM(DEADBAND);
-  mySysId = readEEPROM(SYS_ID);
+  mavlink_system.sysid = readEEPROM(SYS_ID);
   heartBeat = readEEPROM(HEARTBEAT_EN);
   readStruct(LED_CONFIGS, (uint8_t*)ledConfigs, sizeof(ledConfigs));
   readColorConfigs();

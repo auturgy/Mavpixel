@@ -30,7 +30,6 @@
 BetterStream	*mavlink_comm_0_port;
 BetterStream	*mavlink_comm_1_port;
 
-mavlink_system_t mavlink_system = {12,160,0,0};
 uint8_t system_type = 18;//MAV_TYPE_GENERIC;    //No type for a lighting controller, use next free?
 //uint8_t autopilot_type = MAV_AUTOPILOT_GENERIC;
 uint8_t autopilot_type = MAV_AUTOPILOT_INVALID;
@@ -385,7 +384,7 @@ void read_mavlink(){
 void mavSendParameter(int16_t index) {
   //Basic single-value parameters
   if (index == 0) mavlinkSendParam(cmd_version_P, -1, index, mavpixelVersion);
-  else if (index == 1) mavlinkSendParam(cmd_sysid_P, -1, index, mySysId);
+  else if (index == 1) mavlinkSendParam(cmd_sysid_P, -1, index, mavlink_system.sysid);
   else if (index == 2) mavlinkSendParam(cmd_heart_P, -1, index, heartBeat);
 #ifdef LED_STRIP
   else if (index == 3) mavlinkSendParam(cmd_bright_P, -1, index, (uint8_t)((float)stripBright / 2.55f));
