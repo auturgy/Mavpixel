@@ -70,7 +70,7 @@ Derived from: jD-IOBoard_MAVlink Driver
 #define MAVLINK10     // (Leave this as is!) Are we listening MAVLink 1.0 or 0.9   (0.9 is obsolete now)
 #define HEARTBEAT     // HeartBeat signal
 #define RATEREQ       //Send stream rate requests
-#define SOFTSER       //Use SoftwareSerial as configuration port
+//#define SOFTSER       //Use SoftwareSerial as configuration port
 //#define DEBUG             //Output extra debug information 
 #define membug            //Check memory usage
 //#define DUMPVARS          //adds CLI command to dump mavlink variables 

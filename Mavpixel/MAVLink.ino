@@ -181,7 +181,8 @@ void read_mavlink(){
               iob_state = mavlink_msg_heartbeat_get_system_status(&msg);
             }
             break;
-            
+          
+          //Extended status stream (battery, GPS)
           case MAVLINK_MSG_ID_SYS_STATUS:
             {
               iob_vbat_A = (mavlink_msg_sys_status_get_voltage_battery(&msg) / 1000.0f);
@@ -201,7 +202,8 @@ void read_mavlink(){
 
             }
             break;
-            
+          
+          //Extended status stream (battery, GPS)
 #ifndef MAVLINK10 
           case MAVLINK_MSG_ID_GPS_RAW:
             {
@@ -222,14 +224,15 @@ void read_mavlink(){
             }
             break;  
 #endif          
-
+          //RC channels stream
           case MAVLINK_MSG_ID_RC_CHANNELS_RAW:
             {
               iob_chan1 = mavlink_msg_rc_channels_raw_get_chan1_raw(&msg);
               iob_chan2 = mavlink_msg_rc_channels_raw_get_chan2_raw(&msg);
             }
             break;
-  
+          
+          //Extra 2 stream
           case MAVLINK_MSG_ID_VFR_HUD:
             {
               iob_throttle = mavlink_msg_vfr_hud_get_throttle(&msg);
@@ -303,7 +306,11 @@ void read_mavlink(){
                 else if (strncmp_P(set.param_id, cmd_lamptest_P, 8) == 0) index = 11;
 #endif
                 else if (strncmp_P(set.param_id, cmd_baud_P, 4) == 0) {setBaud(set.param_value); index = 9;}
-                else if (strncmp_P(set.param_id, cmd_soft_P, 8) == 0) {setSoftbaud(set.param_value); index = 10;}
+                else if (strncmp_P(set.param_id, cmd_soft_P, 8) == 0) {index = 10;
+#ifdef SOFSER
+                  setSoftbaud(set.param_value); 
+#endif
+                }
                 else if (strncmp_P(set.param_id, cmd_freset_P, 7) == 0) {writeEEPROM(FACTORY_RESET, 1); index = 12;}
                 else if (strncmp_P(set.param_id, cmd_reboot_P, 6) == 0) {reboot = true; index = 13;}
                 //LED parameters
