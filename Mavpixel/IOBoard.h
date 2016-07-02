@@ -101,7 +101,7 @@ static uint32_t parTimer = 50;                  //20hz
 
 //Led timer
 static uint32_t p_led = millis();               // Blinky led startup timer
-static uint32_t led_flash = 500;                //Gets changed in code to alter blink rate
+static uint32_t led_flash = 100;                //Gets changed in code to alter blink rate
 
 static float    iob_vbat_A = 0;                 // Battery A voltage in milivolt
 static uint16_t iob_battery_remaining_A = 0;    // 0 to 100 <=> 0 to 1000

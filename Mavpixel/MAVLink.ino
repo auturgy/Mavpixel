@@ -250,12 +250,20 @@ void read_mavlink(){
             break;
           case MAVLINK_MSG_ID_PARAM_REQUEST_LIST:
 	    {
+              mavlink_param_request_list_t request;
+	      mavlink_msg_param_request_list_decode(&msg, &request);
+	      // Check if this message is for this system
+	      if (request.target_system == mavlink_system.sysid && request.target_component == mavlink_system.compid)
 		// Start sending parameters
 		m_parameter_i = 0;
 	    }
 	    break;
           case MAVLINK_MSG_ID_PARAM_REQUEST_READ:
 	    {
+              mavlink_param_request_read_t request;
+	      mavlink_msg_param_request_read_decode(&msg, &request);
+	      // Check if this message is for this system
+	      if (request.target_system == mavlink_system.sysid && request.target_component == mavlink_system.compid)
                 //Send single parameter (named parameters not supported, and not required by Mission Planner)
                 mavSendParameter(mavlink_msg_param_request_read_get_param_index(&msg));
                 //mavlink_msg_param_request_read_get_param_id(&msg, mavParamBuffer);
@@ -263,11 +271,15 @@ void read_mavlink(){
 	    break;
           case MAVLINK_MSG_ID_MISSION_REQUEST_LIST:
 	    {
-              //Tell QGroundControl there is no mission
-              mavlink_msg_mission_count_send(MAVLINK_COMM_0,
-                apm_mav_system,
-                apm_mav_component,
-                0);
+              mavlink_mission_request_list_t request;
+	      mavlink_msg_mission_request_list_decode(&msg, &request);
+	      // Check if this message is for this system
+	      if (request.target_system == mavlink_system.sysid && request.target_component == mavlink_system.compid)
+                //Tell QGroundControl there is no mission
+                mavlink_msg_mission_count_send(MAVLINK_COMM_0,
+                  apm_mav_system,
+                  apm_mav_component,
+                  0);
 	    }
 	    break;
           case MAVLINK_MSG_ID_PARAM_SET:
@@ -363,7 +375,7 @@ void read_mavlink(){
               // process ping requests (tgt_system and tgt_comp must be zero)
               mavlink_ping_t ping;
               mavlink_msg_ping_decode(&msg, &ping);
-              if(ping.target_system == 0 && ping.target_component == 0)
+              if(ping.target_system == 0 && (ping.target_component == 0 || ping.target_component == mavlink_system.compid))
                 mavlink_msg_ping_send(MAVLINK_COMM_0, ping.time_usec, ping.seq, msg.sysid, msg.compid);
             }
             break;
