@@ -158,9 +158,14 @@ void read_mavlink(){
 #ifdef DEBUG
               println(F("MAVLink HeartBeat"));
 #endif
-  	      apm_mav_system    = msg.sysid;
+              apm_mav_type = mavlink_msg_heartbeat_get_type(&msg);
+
+              //Ignore heartbeats from ground stations
+              if (apm_mav_type == MAV_TYPE_GCS) break;
+  	      
+              //Find the target of the host vehicle
+              apm_mav_system = msg.sysid;
   	      apm_mav_component = msg.compid;
-              apm_mav_type      = mavlink_msg_heartbeat_get_type(&msg);
   
               //Flight mode
               iob_mode = mavlink_msg_heartbeat_get_custom_mode(&msg);
@@ -326,11 +331,11 @@ void read_mavlink(){
                 else if (strncmp_P(set.param_id, cmd_reboot_P, 6) == 0) {reboot = true; index = 13;}
                 //LED parameters
                 else if (strncmp_P(set.param_id, mav_led_P, 4) == 0) {
-                  char* arg = strstr(cmdBuffer, "_");
+                  char* arg = strstr(set.param_id, "_");
                   if (arg > 0) {
                     index = atoi(arg + 1);
 #ifdef LED_STRIP
-                    memcpy(&ledConfigs[index], &param, 4);
+                    memcpy(&ledConfigs[index], &set.param_value, 4);
                     writeLedConfig(index, &ledConfigs[index]);
 #endif
                     index += 14;
@@ -338,7 +343,7 @@ void read_mavlink(){
                 }
                 //Mode parameters
                 else if (strncmp_P(set.param_id, mav_mode_P, 5) == 0) {
-                  char* arg = strstr(cmdBuffer, "_");
+                  char* arg = strstr(set.param_id, "_");
                   if (arg > 0) {
                     index = atoi(arg + 1);
 #ifdef LED_STRIP
@@ -355,11 +360,11 @@ void read_mavlink(){
                 }
                 //Color parameters
                 else if (strncmp_P(set.param_id, mav_color_P, 6) == 0) {
-                  char* arg = strstr(cmdBuffer, "_");
+                  char* arg = strstr(set.param_id, "_");
                   if (arg > 0) {
                     index = atoi(arg + 1);
 #ifdef LED_STRIP
-                    memcpy(colors[index], &param, 4);
+                    memcpy(colors[index], &set.param_value, 4);
                     writeColorConfig(index, colors[index]);
 #endif
                     index += 67;
