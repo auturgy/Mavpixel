@@ -259,13 +259,6 @@ void read_mavlink(){
               mavlink_param_request_list_t request;
 	      mavlink_msg_param_request_list_decode(&msg, &request);
 	      // Check if this message is for this system
-	      /*
-              print(F("Param req - Sysid:"));
-              print(request.target_system);
-              print(F(" Compid:"));
-              print(request.target_component);
-              */
-
               if (request.target_system == mavlink_system.sysid 
                   && (request.target_component == mavlink_system.compid || request.target_component == 0))
 		// Start sending parameters
@@ -290,7 +283,9 @@ void read_mavlink(){
 	      mavlink_msg_mission_request_list_decode(&msg, &request);
 	      // Check if this message is for this system
 	      if (request.target_system == mavlink_system.sysid
-                  && (request.target_component == mavlink_system.compid || request.target_component == 0))
+                  && (request.target_component == mavlink_system.compid 
+                  || request.target_component == 0
+                  || request.target_component == MAV_COMP_ID_MISSIONPLANNER))
                 //Tell QGroundControl there is no mission
                 mavlink_msg_mission_count_send(MAVLINK_COMM_0,
                   apm_mav_system,
