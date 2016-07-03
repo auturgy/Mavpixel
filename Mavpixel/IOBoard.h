@@ -88,12 +88,19 @@ const char PROGMEM mav_color_P[] = "color_";
 #define MOTORS_ARMED 128
 
 #define ONBOARD_PARAM_COUNT 83
+
+#define MAVLINK_TIMEOUT  5 //Seconds of missing Mavlink before deciding link is down
+
+#define MAV_COMP_ID_MAVPIXEL 160  //Our own component id
+#define MAV_COMP_ID_VEHICLE 1     //So far as I can tell vehicles use compid 1
+
 ///////////////////////////
 // Global variables
 
 // Counters and millisecond placeholders used around the code
+//  Better leave heartbeat timer at one hz as it also times stream rate requests
 static uint32_t hbMillis = millis();            // HeartBeat timer
-static uint32_t hbTimer = 500;                  //2hz
+static uint32_t hbTimer = 1000;                  //1hz
 
 //Parameter send timer
 static uint32_t parMillis = millis();           // Parameter timer
@@ -119,20 +126,27 @@ static int16_t   iob_chan2 = 1500;              //Pitch
 static uint16_t  iob_throttle = 0;               // throtle
 
 //MAVLink session control
-mavlink_system_t mavlink_system = {12,160,0,0};
+mavlink_system_t mavlink_system = {12,MAV_COMP_ID_MAVPIXEL,0,0};
 boolean heartBeat;
 static uint8_t  apm_mav_type;
-static uint8_t  apm_mav_system; 
+static int16_t  apm_mav_system = -1;    // -1 used to indicate no vehicle found 
 static uint8_t  apm_mav_component;
-static boolean  enable_mav_request = 0;
 static int16_t  m_parameter_i = ONBOARD_PARAM_COUNT;
+char mavParamBuffer[MAVLINK_MSG_PARAM_SET_FIELD_PARAM_ID_LEN];
 
 static uint8_t system_mode = MAV_MODE_PREFLIGHT; ///< Booting up
 static uint32_t custom_mode = 0;                 ///< Custom mode, can be defined by user/adopter
 static uint8_t system_state = MAV_STATE_STANDBY; ///< System ready for flight
 
+//Desired data stream rates
+#define MAV_DATA_RATE_EXTENDED_STATUS 2
+#define MAV_DATA_RATE_RC_CHANNELS 5
+#define MAV_DATA_RATE_EXTRA2 5
 
-char mavParamBuffer[MAVLINK_MSG_PARAM_SET_FIELD_PARAM_ID_LEN];
+//Data stream rate counters
+static uint8_t sr_ext_stat = 0;
+static uint8_t sr_rc_chan = 0;
+static uint8_t sr_extra_2 = 0;
 
 // General states
 byte flMode;          // Our current flight mode as defined

@@ -70,7 +70,7 @@ Derived from: jD-IOBoard_MAVlink Driver
 #define MAVLINK10     // (Leave this as is!) Are we listening MAVLink 1.0 or 0.9   (0.9 is obsolete now)
 #define HEARTBEAT     // HeartBeat signal
 #define RATEREQ       //Send stream rate requests
-//#define SOFTSER       //Use SoftwareSerial as configuration port
+#define SOFTSER       //Use SoftwareSerial as configuration port
 //#define DEBUG             //Output extra debug information 
 #define membug            //Check memory usage
 //#define DUMPVARS          //adds CLI command to dump mavlink variables 
@@ -126,7 +126,7 @@ float mavpixelVersion = CHKMAJ + (float)(CHKMIN / 10);
 #define ledPin 13     // Blinky LED if any
 
 //Main loop controls
-int messageCounter;
+int mavlinkTimeoutCounter;
 static bool mavlink_active;
 static bool cli_active;
 byte ledState;  //Onboard led state
@@ -204,13 +204,6 @@ void setup()
 
   println(F("Press <Enter> 3 times for CLI."));
   
-  // Enable MAV rate request
-#ifndef SOFTSER
-  enable_mav_request = 0;  //delayed start  
-#else
-  enable_mav_request = 3;  //start immediately
-#endif
-
 } // END of setup();
 
 
@@ -244,27 +237,5 @@ void loop()
     //Send any queued Mavlink messages    
     mavSendData();
 
-    //Mavlink data stream rate requests
-#ifdef RATEREQ
-    // Request rates again on every 10th check if mavlink is still dead.
-#ifndef SOFTSER  //Active CLI on telemetry port pauses mavlink
-    if(!mavlink_active && messageCounter >= 10 && !cli_active) {
-#else
-    if(!mavlink_active && messageCounter >= 10) {
-#endif
-      enable_mav_request = 3;//1; //Three times to certify it will be readed
-      messageCounter = 0;
-    } 
-#endif
-
-    //Check for Mavlink lost
-    if(mavlink_active && messageCounter >= 20) {
-#ifdef DEBUG
-      println(F("We lost MAVLink"));
-#endif
-      mavlink_active = 0;
-      messageCounter = 0;
-      led_flash = 100;        //Fast flash
-    }
 }
 
