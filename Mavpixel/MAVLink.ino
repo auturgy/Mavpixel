@@ -52,11 +52,7 @@ void HeartBeat() {
 
     //Send heartbeats
 #ifdef HEARTBEAT
-#ifndef SOFTSER  //Active CLI on telemetry port pauses mavlink
-    if (!cli_active && heartBeat) {
-#else
-    if (heartBeat) {
-#endif
+    if (!cliMavlink.active && heartBeat) {
       //Set system_state flags
       if (apm_mav_system == -1) system_state = MAV_STATE_STANDBY;
       else system_state = MAV_STATE_ACTIVE;
@@ -123,20 +119,6 @@ void request_mavlink_rates(uint8_t MAVStream, uint8_t MAVRate)
 }
 #endif
 
-#ifdef SOFTSER
-//Read software serial data into CLI line buffer
-void read_softser(){
-  while(dbSerial.available() > 0) { 
-    uint8_t c = dbSerial.read();
-    //Look for CLI on SoftSerial channel
-    if (countCrLf(c)) return;
-    if (cli_active) {
-      CLIchar(c);
-    }
-  }
-}
-#endif
-
 //+++++++++++++++++++
 //Main mavlink reader
 void read_mavlink(){
@@ -146,12 +128,10 @@ void read_mavlink(){
   // grabing data 
   while(Serial.available() > 0) { 
     uint8_t c = Serial.read();
-#ifndef SOFTSER
     //Look for CLI on mavlink channel
-    if (countCrLf(c)) return;
-    if (cli_active) CLIchar(c);
+    if (!mavlink_active && !cliMavlink.active && countCrLf(c, &cliMavlink)) return;
+    if (!mavlink_active && cliMavlink.active) CLIchar(c, &cliMavlink);
     else {
-#endif    
       // trying to grab msg  
       if(mavlink_parse_char(MAVLINK_COMM_0, c, &msg, &status)) {
          mavlink_active = 1;
@@ -319,9 +299,7 @@ void read_mavlink(){
             break;
         }
       }
-#ifndef SOFTSER
     }
-#endif    
     delayMicroseconds(138);
     //next one
   }

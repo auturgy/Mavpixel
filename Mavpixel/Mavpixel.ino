@@ -131,10 +131,6 @@ static bool mavlink_active;
 static bool cli_active;
 byte ledState;  //Onboard led state
 
-//Serial command buffer
-char cmdBuffer[32];
-uint8_t cmdLen = 0;
-
 // Objects and Serial definitions
 FastSerialPort0(Serial);
 
@@ -147,13 +143,24 @@ FastSerialPort0(Serial);
 Adafruit_NeoPixel* strip[4];
 #endif
 
+#define outln(data, stream) stream->println(data)
+#define out(data, stream) stream->print(data)
+#define outlf(stream) stream->println()
 #ifdef SOFTSER
 AltSoftSerial dbSerial;        // AltSoftSerial always uses pins 9, 8
-#define println dbSerial.println
-#define print dbSerial.print
+#define bothln(data) {dbSerial.println(data); Serial.println(data);}
+#define both(data) {dbSerial.print(data); Serial.print(data);}
 #else
-#define println Serial.println
-#define print Serial.print
+#define bothln(data) Serial.println(data)
+#define both(data) Serial.print(data)
+#endif
+
+//Mavlink Serial command buffer
+cliConfig_t cliMavlink;
+
+#ifdef SOFTSER
+//Software Serial command buffer
+cliConfig_t cliSoftser;
 #endif
 
 /* **********************************************/
@@ -166,16 +173,22 @@ void setup()
   
   // Initialize Mavlink Serial port, speed
   Serial.begin((uint32_t)readEP16(MAVLINK_BAUD) * 10);
+  cliMavlink.stream = &Serial;
 
 #ifdef SOFTSER
   // Our software serial is connected on pins 9 and 8
   // We don't want to too fast, max baud 38400
   dbSerial.begin((uint32_t)readEP16(SOFTSER_BAUD) * 10);                    
+  cliSoftser.stream = &dbSerial;
 #endif
 
+
+//  Stream *mySerial = &dbSerial;
+  
+//  mySerial->println("Testing..");
   //print & println functions ready
-  println(F("\r\nMavpixel " VER " initialised."));
-  if (eeReset) println(F("Factory Reset."));
+  bothln(F("\r\nMavpixel " VER " initialised."));
+  if (eeReset) bothln(F("Factory Reset."));
   // setup mavlink port (just one)
   mavlink_comm_0_port = &Serial;
 
@@ -198,11 +211,11 @@ void setup()
 
   // Jani's debug stuff  
 #ifdef membug
-  print(freeMem());
-  println(F(" bytes free RAM."));
+  both(freeMem());
+  bothln(F(" bytes free RAM."));
 #endif
 
-  println(F("Press <Enter> 3 times for CLI."));
+  bothln(F("Press <Enter> 3 times for CLI."));
   
 } // END of setup();
 

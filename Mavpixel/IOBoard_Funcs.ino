@@ -42,27 +42,21 @@ void changeSoftRate(uint32_t newBaud) {
 //Check incoming characters for 3xCRLF and start CLI (return true) if found
 // Software serial CLI waits forever.
 // Mavlink CLI times out after 20 seconds and is disabled if Mavlink is detected. 
-boolean countCrLf(uint8_t c) {
-    /* allow CLI to be started by hitting enter 3 times, if no
-     heartbeat packets have been received */
-#ifndef SOFTSER
-  if (mavlink_active == 0 && cli_active == 0 && millis() < 20000) {
-#else
-  if (cli_active == 0) {
-#endif
-      if (c == '\n') {
-          crlf_count++;
-      } else if (c != '\r') {
-          crlf_count = 0;
-      }
-      if (crlf_count > 2) {
-        cli_active = true;
-        crlf_count = 0;
-        enterCommandMode();
-        cmdLen = 0;
-        cmdBuffer[0] = 0;
-        return true;
-      }
+boolean countCrLf(uint8_t c, cliConfig_t *cli) {
+  /* allow CLI to be started by hitting enter 3 times, if no
+   heartbeat packets have been received */
+  if (c == '\n') {
+      cli->crlfCount++;
+  } else if (c != '\r') {
+      cli->crlfCount = 0;
+  }
+  if (cli->crlfCount > 2) {
+    cli->active = true;
+    cli->crlfCount = 0;
+    enterCommandMode(cli->stream);
+    cli->length = 0;
+    cli->buffer[0] = 0;
+    return true;
   }
   return false;
 }
@@ -70,33 +64,47 @@ boolean countCrLf(uint8_t c) {
 //Accumulate characters into a 32-byte command buffer
 // Dispatches command to CLI on <Enter> found
 // handles backspace key, provides remote echo
-void CLIchar(uint8_t c) {
+void CLIchar(uint8_t c, cliConfig_t *cli) {
    if (c == '\n') {
      //got a full buffer
-     println();
-     doCommand();
-     print(F("#"));
-     cmdLen = 0;
-     cmdBuffer[0] = 0;
+     outlf(cli->stream);
+     doCommand(cli);
+     out(F("#"), cli->stream);
+     cli->length = 0;
+     cli->buffer[0] = 0;
    } else {
      //Add character to buffer
-     if (cmdLen < 31) {
+     if (cli->length < 31) {
        if (c == 8) {              //Backspace
-         if (cmdLen > 0) {
-           cmdLen--;
-           cmdBuffer[cmdLen] = 0;
-           print((char)c);      //Echo 
+         if (cli->length > 0) {
+           cli->length--;
+           cli->buffer[cli->length] = 0;
+           out((char)c, cli->stream);      //Echo 
          }
        }
        else {
-         cmdBuffer[cmdLen] = c;
-         cmdBuffer[cmdLen + 1] = 0;
-         cmdLen++;
-         print((char)c);      //Echo 
+         cli->buffer[cli->length] = c;
+         cli->buffer[cli->length + 1] = 0;
+         cli->length++;
+         out((char)c, cli->stream);      //Echo 
        }
      }
    }
 }
+
+#ifdef SOFTSER
+//Read software serial data into CLI line buffer
+void read_softser(){
+  while(dbSerial.available() > 0) { 
+    uint8_t c = dbSerial.read();
+    //Look for CLI on SoftSerial channel
+    if (!cliSoftser.active && countCrLf(c, &cliSoftser)) return;
+    if (cliSoftser.active) {
+      CLIchar(c, &cliSoftser);
+    }
+  }
+}
+#endif
 
 // Our generic flight modes for ArduCopter & ArduPlane
 void CheckFlightMode() {

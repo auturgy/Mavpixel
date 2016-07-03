@@ -151,7 +151,6 @@ static uint8_t sr_extra_2 = 0;
 // General states
 byte flMode;          // Our current flight mode as defined
 byte isArmed = 0;     // Is motors armed flag
-static uint8_t crlf_count = 0;
 
 //LED Strip vars
 #ifdef LED_STRIP
@@ -165,4 +164,14 @@ uint8_t minSats;
 uint8_t deadBand;
 uint8_t lampTest;
 #endif
+
+//CLI processing state
+typedef struct cliConfig_s {
+  char buffer[32];
+  uint8_t length;
+  uint8_t crlfCount;
+  boolean active;
+  Stream *stream;
+} cliConfig_t;
+
 

@@ -422,32 +422,32 @@ bool parseLedStripConfig(uint8_t ledIndex, const char *config)
     return ok;
 }
 
-void printLedConfig(uint8_t ledIndex)
+void printLedConfig(uint8_t ledIndex, Stream *stream)
 {
     uint8_t mappingIndex;
     char code;
 
     ledConfig_t *ledConfig = &ledConfigs[ledIndex];
 
-    print(GET_LED_X(ledConfig));
-    print(",");
-    print(GET_LED_Y(ledConfig));    
-    print(":");
+    out(GET_LED_X(ledConfig), stream);
+    out(F(","), stream);
+    out(GET_LED_Y(ledConfig), stream);    
+    out(F(":"), stream);
     
     for (mappingIndex = 0; mappingIndex < DIRECTION_COUNT; mappingIndex++) {
         if (ledConfig->flags & pgm_read_word(directionMappings_P + mappingIndex)) {
-          print((char)(pgm_read_byte(directionCodes_P + mappingIndex)));
+          out((char)(pgm_read_byte(directionCodes_P + mappingIndex)), stream);
         }
     }
-    print(":");
+    out(F(":"), stream);
 
     for (mappingIndex = 0; mappingIndex < FUNCTION_COUNT; mappingIndex++) {
         if (ledConfig->flags & pgm_read_word(functionMappings_P + mappingIndex)) {
-          print((char)(pgm_read_byte(functionCodes_P + mappingIndex)));
+          out((char)(pgm_read_byte(functionCodes_P + mappingIndex)), stream);
         }
     }
-    print(":");
-    print(ledConfig->color);
+    out(F(":"), stream);
+    out(ledConfig->color, stream);
 }
 
 
@@ -986,14 +986,14 @@ bool parseColor(uint8_t index, const char *colorConfig)
     return ok;
 }
 
-void printColorConfig(uint8_t index)
+void printColorConfig(uint8_t index, Stream *stream)
 {
     hsvColor_t *color = colors[index];
-    print(colors[index]->h);
-    print(",");
-    print(colors[index]->s);
-    print(",");
-    print(colors[index]->v);
+    out(colors[index]->h, stream);
+    out(F(","), stream);
+    out(colors[index]->s, stream);
+    out(F(","), stream);
+    out(colors[index]->v, stream);
 }
 
 bool parseMci(const char *modeConfig)
@@ -1037,12 +1037,12 @@ bool parseMode(int mode, const char *modeColors)
     return true;
 }
 
-void printModeConfig(uint8_t mode)
+void printModeConfig(uint8_t mode, Stream *stream)
 {
-    print(readModeColor(mode, 0));
+    out(readModeColor(mode, 0), stream);
     for (int i = 1; i <= MODE_COLOR_INDEX_MAX; i++) {
-      print(",");
-      print(readModeColor(mode, i));
+      out(F(","), stream);
+      out(readModeColor(mode, i), stream);
     }
 }
 

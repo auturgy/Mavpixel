@@ -22,50 +22,52 @@
 // See: https://github.com/cleanflight/cleanflight/blob/master/docs/LedStrip.md
 
 
-void enterCommandMode() {
-  print(F("\r\nMavPixel " VER " ready.\r\n#"));
+void enterCommandMode(Stream *stream) {
+  out(F("\r\nMavPixel " VER " ready.\r\n#"), stream);
 }
 
-void printLed(uint8_t i) {
-  print(F("led "));
-  print(i);
-  print(F(" "));
-  printLedConfig(i);
-  println();
+void printLed(uint8_t i, Stream *stream) {
+  out(F("led "), stream);
+  out(i, stream);
+  out(F(" "), stream);
+  printLedConfig(i, stream);
+  outlf(stream);
 }
 
-void printColor(uint8_t i) {
-  print(F("color "));
-  print(i);
-  print(F(" "));
-  printColorConfig(i);
-  println();
+void printColor(uint8_t i, Stream *stream) {
+  out(F("color "), stream);
+  out(i, stream);
+  out(F(" "), stream);
+  printColorConfig(i, stream);
+  outlf(stream);
 }
 
-void printMode(uint8_t i) {
-  print(F("mode_color "));
-  print(i);
-  print(F(" "));
-  printModeConfig(i);
-  println();
+void printMode(uint8_t i, Stream *stream) {
+  out(F("mode_color "), stream);
+  out(i, stream);
+  out(F(" "), stream);
+  printModeConfig(i, stream);
+  outlf(stream);
 }
 
-int getNumericArg(char *ptr, int maxVal) {
+int getNumericArg(char *ptr, int maxVal, Stream *stream) {
   int i = atoi(ptr);
   if (i < 0 || i > maxVal) {
-    println(F("Range error")); 
+    outln(F("Range error"), stream); 
     return -1;
   }
 }
 
-boolean checkParse(boolean ok) {
-  if (!ok) println(F("Parse error"));
+boolean checkParse(boolean ok, Stream *stream) {
+  if (!ok) outln(F("Parse error"), stream);
   return ok;
 }
 
-void doCommand() {
+void doCommand(cliConfig_t *cli) {
     char *cp, *arg;
     int got;
+    char *cmdBuffer = cli->buffer;
+    Stream *stream = cli->stream;
   
     //Chop off EOL.
     while ((cp = strchr(cmdBuffer, '\r')) != 0)
@@ -89,7 +91,7 @@ void doCommand() {
   
     //(v) Version info.
     if (strncmp_P(cmdBuffer, cmd_version_P, got) == 0) {
-       println(F("Version: " VER));
+       outln(F("Version: " VER), stream);
        return;
     }
 
@@ -99,8 +101,8 @@ void doCommand() {
         int val = atoi(arg);
         setSysid(val);
       } else {
-        print(F("Sysid: "));
-        println(mavlink_system.sysid);
+        out(F("Sysid: "), stream);
+        outln(mavlink_system.sysid, stream);
       }
       return;
     }
@@ -110,9 +112,9 @@ void doCommand() {
       if (arg) {
         setHeartbeat((strstr(arg, "y") || strstr(arg, "Y")) > 0);
       } else {
-        print(F("Heartbeat: "));
-        if (heartBeat) println(F("YES")); 
-        else println(F("NO"));
+        out(F("Heartbeat: "), stream);
+        if (heartBeat) outln(F("YES"), stream); 
+        else outln(F("NO"), stream);
       }
       return;
     }    
@@ -120,8 +122,8 @@ void doCommand() {
 #ifdef membug
     //(f) Free RAM.
     if (strncmp_P(cmdBuffer, cmd_free_P, got) == 0) {
-          print(F("Free RAM: "));
-          println(freeMem());
+       out(F("Free RAM: "), stream);
+       outln(freeMem(), stream);
        return;
     }
 #endif
@@ -130,54 +132,54 @@ void doCommand() {
     //(led) Configure leds
     if (strncmp_P(cmdBuffer, cmd_led_P, got) == 0) {
       if (arg) {
-        int i = getNumericArg(arg, 31);
+        int i = getNumericArg(arg, 31, stream);
         if (i < 0) return;
         //Get second word
         cp = strstr(arg, " ");
         if (cp) {
           got = arg - cmdBuffer; //length of first word
           cp += 1; //ptr to argument
-          if (checkParse(parseLedStripConfig(i, cp)))
+          if (checkParse(parseLedStripConfig(i, cp), stream))
             writeLedConfig(i, &ledConfigs[i]);
-        } else printLed(i);
-      } else for (int i = 0; i < ledCount; i++) printLed(i);
+        } else printLed(i, stream);
+      } else for (int i = 0; i < ledCount; i++) printLed(i, stream);
       return;
     }
 
     //(color) Configure colors
     if (strncmp_P(cmdBuffer, cmd_color_P, got) == 0) {
       if (arg) {
-        int i = getNumericArg(arg, 15);
+        int i = getNumericArg(arg, 15, stream);
         if (i < 0) return;
         //Get second word
         cp = strstr(arg, " ");
         if (cp) {
           got = arg - cmdBuffer; //length of first word
           cp += 1; //ptr to argument
-          if (checkParse(parseColor(i, cp)))
+          if (checkParse(parseColor(i, cp), stream))
             writeColorConfig(i, colors[i]);
-        } else printColor(i);
-      } else for (int i = 0; i < 16; i++) printColor(i);
+        } else printColor(i, stream);
+      } else for (int i = 0; i < 16; i++) printColor(i, stream);
       return;
     }
 
     //(mode_color) Configure modes
     if (strncmp_P(cmdBuffer, cmd_mode_P, got) == 0) {
       if (arg) {
-        int i = getNumericArg(arg, 20);
+        int i = getNumericArg(arg, 20, stream);
         if (i < 0) return;
         //Get second word
         cp = strstr(arg, " ");
         if (cp) {
           got = arg - cmdBuffer; //length of first word
           cp += 1; //ptr to argument
-          checkParse(parseMode(i, cp));
+          checkParse(parseMode(i, cp), stream);
           return;
         }
         cp = strstr(arg, ",");
-        if (cp) checkParse(parseMci(arg));
-        else printMode(i);
-      } else for (int i = 0; i <= 20; i++) printMode(i);
+        if (cp) checkParse(parseMci(arg), stream);
+        else printMode(i, stream);
+      } else for (int i = 0; i <= 20; i++) printMode(i, stream);
       return;
     }
 
@@ -187,9 +189,9 @@ void doCommand() {
         float val = stof(arg);
         setLowBattVolt(val);
       } else {
-        print(F("Low cell: "));
-        print(lowBattVolt);
-        println(F("v"));
+        out(F("Low cell: "), stream);
+        out(lowBattVolt, stream);
+        outln(F("v"), stream);
       }
       return;
     }
@@ -197,13 +199,13 @@ void doCommand() {
     //(lowpct) Low battery percentage
     if (strncmp_P(cmdBuffer, cmd_lbp_P, got) == 0) {
       if (arg) {
-        int val = getNumericArg(arg, 100);
+        int val = getNumericArg(arg, 100, stream);
         if (val < 0) return;
         setLowBattPct(val);
       } else {
-        print(F("Low pct: "));
-        print(lowBattPct);
-        println(F("%"));
+        out(F("Low pct: "), stream);
+        out(lowBattPct, stream);
+        outln(F("%"), stream);
       }
       return;
     }
@@ -211,12 +213,12 @@ void doCommand() {
     //(minsats) Minimum visible satellites
     if (strncmp_P(cmdBuffer, cmd_minsats_P, got) == 0) {
       if (arg) {
-        int val = getNumericArg(arg, 100);
+        int val = getNumericArg(arg, 100, stream);
         if (val < 0) return;
         setMinSats(val);
       } else {
-        print(F("Min sats: "));
-        println(minSats);
+        out(F("Min sats: "), stream);
+        outln(minSats, stream);
       }
       return;
     }
@@ -224,13 +226,13 @@ void doCommand() {
     //(brightness) LED strip brightness
     if (strncmp_P(cmdBuffer, cmd_bright_P, got) == 0) {
       if (arg) {
-        int val = getNumericArg(arg, 100);
+        int val = getNumericArg(arg, 100, stream);
         if (val < 0) return;
         setBrightPct(val);
       } else {
-        print(F("Brightness: "));
-        print((uint8_t)((float)stripBright / 2.55f));
-        println(F("%"));
+        out(F("Brightness: "), stream);
+        out((uint8_t)((float)stripBright / 2.55f), stream);
+        outln(F("%"), stream);
       }
       return;
     }
@@ -238,12 +240,12 @@ void doCommand() {
     //(deadband) stck movement deadband
     if (strncmp_P(cmdBuffer, cmd_deadband_P, got) == 0) {
       if (arg) {
-        int val = getNumericArg(arg, 255);
+        int val = getNumericArg(arg, 255, stream);
         if (val < 0) return;
         setDeadband(val);
       } else {
-        print(F("Deadband: "));
-        println(deadBand);
+        out(F("Deadband: "), stream);
+        outln(deadBand, stream);
       }
       return;
     }
@@ -254,9 +256,9 @@ void doCommand() {
       if (arg) {
         lampTest = (strstr(arg, "y") || strstr(arg, "Y"));
       } else {
-        print(F("Lamptest: "));
-        if (lampTest) println(F("YES")); 
-        else println(F("NO"));
+        out(F("Lamptest: "), stream);
+        if (lampTest) outln(F("YES"), stream); 
+        else outln(F("NO"), stream);
       }
       return;
     }    
@@ -268,9 +270,9 @@ void doCommand() {
       if (arg) {
         setStripAnim((strstr(arg, "y") || strstr(arg, "Y")) > 0);
       } else {
-        print(F("Animation: "));
-        if (stripAnim) println(F("YES")); 
-        else println(F("NO"));
+        out(F("Animation: "), stream);
+        if (stripAnim) outln(F("YES"), stream); 
+        else outln(F("NO"), stream);
       }
       return;
     }    
@@ -283,7 +285,7 @@ void doCommand() {
       if (got == 7) { 
        // Factory reset request flag 
        writeEEPROM(FACTORY_RESET, 1);
-       println(F("Please reset Mavpixel"));
+       outln(F("Please reset Mavpixel"), stream);
       }
       return;
     }
@@ -299,8 +301,8 @@ void doCommand() {
         uint32_t val = atol(arg);
         if (val > 0) setBaud(val);
       } else {
-        print(F("Baud: "));
-        println((uint32_t)readEP16(MAVLINK_BAUD) * 10);
+        out(F("Baud: "), stream);
+        outln((uint32_t)readEP16(MAVLINK_BAUD) * 10, stream);
       }
       return;
     }
@@ -313,11 +315,11 @@ void doCommand() {
         if (val > 0) setSoftbaud(val);
 #endif
       } else {
-        print(F("Soft: "));
+        out(F("Soft: "), stream);
 #ifdef SOFTSER
-        println((uint32_t)readEP16(SOFTSER_BAUD) * 10);
+        outln((uint32_t)readEP16(SOFTSER_BAUD) * 10, stream);
 #else
-        println(0);
+        outln(0, stream);
 #endif
       }
       return;
@@ -326,22 +328,22 @@ void doCommand() {
 #ifdef DUMPVARS
     //(vars) Variables info.
     if (strncmp_P(cmdBuffer, cmd_vars_P, got) == 0) {
-       dumpVars();
+       dumpVars(stream);
        return;
     }
 #endif
 
-#ifndef SOFTSER
     //(quit) Return to Mavlink mode
     if (strncmp_P(cmdBuffer, cmd_quit_P, got) == 0) {
-      println(F("Resuming Mavlink mode.."));
-      cli_active = 0;
+      if (cliMavlink.active) {
+        outln(F("Resuming Mavlink mode.."), stream);
+        cliMavlink.active = false;
+      } else outln(F("Mavlink active."), stream);
       return;
     }
-#endif
 
     if (strncmp_P(cmdBuffer, cmd_help_P, got) == 0) {
-      println( F("List of commands:\r\n" 
+      outln( F("List of commands:\r\n" 
       "version   \tMavPixel firmware version\r\n" 
       "sysid     \tMavlink system id\r\n" 
       "heartbeat \tEmit Mavlink heartbeats\r\n" 
@@ -372,14 +374,12 @@ void doCommand() {
       "free      \tFree RAM\r\n" 
 #endif
       "help      \tThis list\r\n"
-#ifndef SOFTSER
       "quit      \tExit CLI mode"
-#endif
-      ));
+      ), stream);
       return;
     }
 
     //Command unknown
-    println( F("Unknown command"));
+    outln( F("Unknown command"), stream);
 
 }
