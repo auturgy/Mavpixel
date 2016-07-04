@@ -557,7 +557,7 @@ void applyLedWarningLayer(uint8_t updateNow)
         if (mavlink_active && iob_state >= MAV_STATE_CRITICAL) {
             warningFlags |= WARNING_FLAG_FAILSAFE;
         }
-        if (mavlink_active && iob_state < MAV_STATE_STANDBY) {
+        if (mavlink_active && iob_state > MAV_STATE_UNINIT && iob_state < MAV_STATE_STANDBY) {
             warningFlags |= WARNING_FLAG_ARMING_DISABLED;
         }
     }
