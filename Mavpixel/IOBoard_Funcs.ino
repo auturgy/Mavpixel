@@ -39,7 +39,15 @@ void changeSoftRate(uint32_t newBaud) {
 }
 #endif
 
-//Check incoming characters for 3xCRLF and start CLI (return true) if found
+//Synchronise software serial to help prevent corruptions
+void flush() {
+#ifdef SOFTSER
+  dbSerial.flushOutput();                   //Finish transmitting
+  while (dbSerial.isReceiving()) delay(1);  //Finish receiving
+#endif
+}
+
+//Check incoming characters for 3xCRLF and start CLI (& return true) if found
 // Software serial CLI waits forever.
 // Mavlink CLI times out after 20 seconds and is disabled if Mavlink is detected. 
 boolean countCrLf(uint8_t c, cliConfig_t *cli) {
@@ -145,20 +153,32 @@ void CheckFlightMode() {
 
 //Onboard blinky  
 void ledFlasher() {
-  uint32_t timer = millis();
-  if (timer - p_led > led_flash)
+  if (millis() - p_led > led_flash)
   {
     // save the last time you blinked the LED 
     p_led += led_flash;
     // if the LED is off turn it on and vice-versa:
-    if (ledState == LOW)
-      ledState = HIGH;
-    else
-      ledState = LOW;
-    // set the LED with the ledState of the variable:
-    digitalWrite(ledPin, ledState);   
+    digitalWrite(ledPin, ledState = !ledState);   
   }
 }
+
+#ifdef USE_LAMPTEST
+void rainbowCycle() {
+  static uint16_t j = 0;
+  hsvColor_t c;
+  c.s = 0;
+  c.v = 255;
+  uint16_t i;
+  if (j == 360) j == 0;
+  for(i = 0; i < 32; i++) {
+    c.h = (j + (i * 45)) % 359;
+    setLedHsv(i, &c);
+  }
+  show();
+  j += 10;
+}
+#endif
+
 
 // Checking if BIT is active in PARAM, return true if it is, false if not
 byte isBit(byte param, byte bitfield) {
@@ -175,21 +195,21 @@ void softwareReboot()
 
 //Dump Mavlink vars
 #ifdef DUMPVARS
-void dumpVars() {
- print(F("Sats:"));
- println(iob_satellites_visible);
- print(F("Fix:"));
- println(iob_fix_type);
- print(F("Hdop:"));
- println(iob_hdop);
- print(F("Modes:"));
- println(iob_mode);
- print(F("Armed:"));
- println(isArmed);
- print(F("Thr:"));
- println(iob_throttle);
- print(F("BatVolt:"));
- println(iob_vbat_A);
+void dumpVars(Stream *stream) {
+ out(F("Sats:"), stream);
+ outln(iob_satellites_visible, stream);
+ out(F("Fix:"), stream);
+ outln(iob_fix_type, stream);
+ out(F("Hdop:"), stream);
+ outln(iob_hdop, stream);
+ out(F("Modes:"), stream);
+ outln(iob_mode, stream);
+ out(F("Armed:"), stream);
+ outln(isArmed, stream);
+ out(F("Thr:"), stream);
+ outln(iob_throttle, stream);
+ out(F("BatVolt:"), stream);
+ outln(iob_vbat_A, stream);
 }
 #endif
 

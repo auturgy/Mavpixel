@@ -152,9 +152,7 @@ boolean checkEeprom() {
 #ifdef LED_STRIP
 //Brightness
 void setBrightPct(uint8_t percentage) {
-  stripBright = (float)percentage * 2.55f + 0.5f;
-  setBrightness(stripBright);
-  writeEEPROM(STRIP_BRIGHT, stripBright);
+  setBrightness((float)percentage * 2.55f + 0.5f);
 }
 
 //Low cell voltage

@@ -30,10 +30,6 @@
 BetterStream	*mavlink_comm_0_port;
 BetterStream	*mavlink_comm_1_port;
 
-//No type for a lighting controller, use next free?
-uint8_t system_type = 18;//MAV_TYPE_GENERIC;    //using ONBOARD_CONTROLLER for now
-
-uint8_t autopilot_type = MAV_AUTOPILOT_INVALID;  //No GCS appears to be using this right now..
 mavlink_param_union_t param;
  
 #include "Mavlink_compat.h"
@@ -45,10 +41,9 @@ mavlink_param_union_t param;
 //Periodic (1hz) functions
 // Called from main loop
 void HeartBeat() {
-  uint32_t timer = millis();
-  if(timer - hbMillis > hbTimer) 
+  if(millis() - hbMillis > HB_TIMER) 
   {
-    hbMillis += hbTimer;
+    hbMillis += HB_TIMER;
 
     //Send heartbeats
 #ifdef HEARTBEAT
@@ -57,7 +52,7 @@ void HeartBeat() {
       if (apm_mav_system == -1) system_state = MAV_STATE_STANDBY;
       else system_state = MAV_STATE_ACTIVE;
       //emit heartbeat
-      mavlink_msg_heartbeat_send(MAVLINK_COMM_0, system_type, autopilot_type, system_mode, custom_mode, system_state);
+      mavlink_msg_heartbeat_send(MAVLINK_COMM_0, SYSTEM_TYPE, AUTOPILOT_TYPE, SYSTEM_MODE, CUSTOM_MODE, system_state);
     }
 #endif 
 
@@ -94,9 +89,8 @@ void HeartBeat() {
 //Send Mavlink parameter list
 // Called from main loop
 void mavSendData() {
-  uint32_t timer = millis();
-  if(timer - parMillis > parTimer) {
-    parMillis += parTimer;
+  if(millis() - parMillis > PAR_TIMER) {
+    parMillis += PAR_TIMER;
     //send parameters one by one
     if (m_parameter_i < ONBOARD_PARAM_COUNT) {
       mavSendParameter(m_parameter_i);
@@ -131,7 +125,8 @@ void read_mavlink(){
     //Look for CLI on mavlink channel
     if (!mavlink_active && !cliMavlink.active && countCrLf(c, &cliMavlink)) return;
     if (!mavlink_active && cliMavlink.active) CLIchar(c, &cliMavlink);
-    else {
+    else 
+    {
       // trying to grab msg  
       if(mavlink_parse_char(MAVLINK_COMM_0, c, &msg, &status)) {
          mavlink_active = 1;
@@ -184,15 +179,15 @@ void read_mavlink(){
               iob_battery_remaining_A = mavlink_msg_sys_status_get_battery_remaining(&msg);
   
 #ifdef LED_STRIP
-              //Detect number of cells
-              if (numCells == 0 && iob_vbat_A > 7.5) {
-                if(iob_vbat_A>21.2) numCells = 6;
-                else if(iob_vbat_A>17) numCells = 5;
-                else if(iob_vbat_A>12.8) numCells = 4;
-                else if(iob_vbat_A>7.5) numCells = 3;
+              //Detect number of cells once on first valid battery report
+              if (iob_numCells == 0 && iob_vbat_A > 7.5) {
+                if(iob_vbat_A>21.2) iob_numCells = 6;
+                else if(iob_vbat_A>17) iob_numCells = 5;
+                else if(iob_vbat_A>12.8) iob_numCells = 4;
+                else if(iob_vbat_A>7.5) iob_numCells = 3;
               }
               //Calculate cell voltage
-              if (numCells > 0) cellVoltage = iob_vbat_A / numCells;
+              if (iob_numCells > 0) iob_cellVoltage = iob_vbat_A / iob_numCells;
 #endif
 
             }
@@ -401,7 +396,7 @@ void mavSendParameter(int16_t index) {
     else if (index == 1) mavlinkSendParam(cmd_sysid_P, -1, index, mavlink_system.sysid);
     else if (index == 2) mavlinkSendParam(cmd_heart_P, -1, index, heartBeat);
 #ifdef LED_STRIP
-    else if (index == 3) mavlinkSendParam(cmd_bright_P, -1, index, (uint8_t)((float)stripBright / 2.55f));
+    else if (index == 3) mavlinkSendParam(cmd_bright_P, -1, index, (uint8_t)((float)readEEPROM(STRIP_BRIGHT) / 2.55f));
 #ifdef USE_LED_ANIMATION
     else if (index == 4) mavlinkSendParam(cmd_anim_P, -1, index, stripAnim);
 #else
@@ -430,8 +425,7 @@ void mavSendParameter(int16_t index) {
     else if (index >= 14 && index < 46) 
     {
 #ifdef LED_STRIP
-        memcpy(&param, &ledConfigs[index - 14], 4);     
-        mavlinkSendParam(mav_led_P, index - 14, index, param.param_float);
+        mavlinkSendParam(mav_led_P, index - 14, index, *(float*)(&ledConfigs[index - 14]));
 #else  //LED_STRIP disabled, send dummy values
         mavlinkSendParam(mav_led_P, index - 14, index, 0);
 #endif
@@ -458,8 +452,7 @@ void mavSendParameter(int16_t index) {
     //Colour palette - sent as 4 byte Hue(2):Sat(1):Val(1) 
     else if (index >= 67 && index < 83) {
 #ifdef LED_STRIP
-        memcpy(&param, colors[index - 67], 4);
-        mavlinkSendParam(mav_color_P, index - 67, index, param.param_float);
+        mavlinkSendParam(mav_color_P, index - 67, index, *(float*)(&colors[index - 67]));
 #else  //LED_STRIP disabled, send dummy values
         mavlinkSendParam(mav_color_P, index - 67, index, 0);
 #endif

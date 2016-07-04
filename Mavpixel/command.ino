@@ -21,7 +21,6 @@
 // LED-related Cleanflight command descriptions mostly apply
 // See: https://github.com/cleanflight/cleanflight/blob/master/docs/LedStrip.md
 
-
 void enterCommandMode(Stream *stream) {
   out(F("\r\nMavPixel " VER " ready.\r\n#"), stream);
 }
@@ -231,7 +230,7 @@ void doCommand(cliConfig_t *cli) {
         setBrightPct(val);
       } else {
         out(F("Brightness: "), stream);
-        out((uint8_t)((float)stripBright / 2.55f), stream);
+        out((uint8_t)((float)readEEPROM(STRIP_BRIGHT) / 2.55f), stream);
         outln(F("%"), stream);
       }
       return;

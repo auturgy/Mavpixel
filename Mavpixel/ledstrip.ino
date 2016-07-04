@@ -116,16 +116,6 @@ typedef enum {
     COLOR_DEEP_PINK,
 } colorIds;
 
-typedef enum {
-    DIRECTION_NORTH = 0,
-    DIRECTION_EAST,
-    DIRECTION_SOUTH,
-    DIRECTION_WEST,
-    DIRECTION_UP,
-    DIRECTION_DOWN
-} directionId_e;
-
-
 // Note, the color index used for the mode colors below refer to the default colors.
 static const uint8_t PROGMEM ModeColors_P[] = {
 //Stabilize  
@@ -173,6 +163,7 @@ static const uint8_t PROGMEM ModeColors_P[] = {
 };  
 
 //Mode colors are used from EEPROM to save memory
+// Read defaults out of PROGMEM to init EEPROM
 void writeModeColorsDefault() {
   const uint8_t* p = &ModeColors_P[0];
   for (int i = 0; i < sizeof(ModeColors_P); i++)
@@ -560,7 +551,7 @@ void applyLedWarningLayer(uint8_t updateNow)
 
     if (updateNow && warningFlashCounter == 0) {
         warningFlags = WARNING_FLAG_NONE;
-        if (cellVoltage > 1 && ((cellVoltage < lowBattVolt) || (iob_battery_remaining_A < lowBattPct))) {
+        if (iob_cellVoltage > 1 && ((iob_cellVoltage < lowBattVolt) || (iob_battery_remaining_A < lowBattPct))) {
             warningFlags |= WARNING_FLAG_LOW_BATTERY;
         }
         if (mavlink_active && iob_state >= MAV_STATE_CRITICAL) {
@@ -648,8 +639,6 @@ void applyLedGpsLayer(bool updateNow)
     }
 }
 #endif
-
-//#define INDICATOR_DEADBAND 25
 
 void applyLedIndicatorLayer(uint8_t indicatorFlashState)
 {

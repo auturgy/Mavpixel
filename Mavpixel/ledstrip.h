@@ -112,19 +112,3 @@ extern uint8_t ledsInRingCount;
 extern ledConfig_t ledConfigs[MAX_LED_STRIP_LENGTH];
 extern hsvColor_t* colors[CONFIGURABLE_COLOR_COUNT];
 
-void ledStripInit(void);
-
-bool parseLedStripConfig(uint8_t ledIndex, const char *config);
-void updateLedStrip(void);
-void updateLedRing(void);
-
-void applyDefaultLedStripConfig(void);
-void generateLedConfig(uint8_t ledIndex, char *ledConfigBuffer, size_t bufferSize);
-
-bool parseColor(uint8_t index, const char *colorConfig);
-void applyDefaultColors(void);
-
-void ledStripInit(void);
-void ledStripEnable(void);
-void reevalulateLedConfig(void);
-

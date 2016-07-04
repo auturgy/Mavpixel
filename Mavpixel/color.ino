@@ -107,13 +107,13 @@ void hsvToRgb24(const hsvColor_t* c, rgbColor24bpp_t* r)
 // See: https://github.com/FastLED/FastLED/wiki/Interrupt-problems
 
 void ledSetup() {
-  strip[0] = new Adafruit_NeoPixel(8, NEO_PIN1, NEO_GRB + NEO_KHZ800);
+  strip[0] = new Adafruit_NeoPixel(8, NEO_PIN1, NEO_FLAGS);
   strip[0]->begin();
-  strip[1] = new Adafruit_NeoPixel(8, NEO_PIN2, NEO_GRB + NEO_KHZ800);
+  strip[1] = new Adafruit_NeoPixel(8, NEO_PIN2, NEO_FLAGS);
   strip[1]->begin();
-  strip[2] = new Adafruit_NeoPixel(8, NEO_PIN3, NEO_GRB + NEO_KHZ800);
+  strip[2] = new Adafruit_NeoPixel(8, NEO_PIN3, NEO_FLAGS);
   strip[2]->begin();
-  strip[3] = new Adafruit_NeoPixel(8, NEO_PIN4, NEO_GRB + NEO_KHZ800);
+  strip[3] = new Adafruit_NeoPixel(8, NEO_PIN4, NEO_FLAGS);
   strip[3]->begin();
 }
 
@@ -149,13 +149,7 @@ void setBrightness(uint8_t v){
   strip[1]->setBrightness(v);
   strip[2]->setBrightness(v);
   strip[3]->setBrightness(v);
-}
-
-void flush() {
-#ifdef SOFTSER
-  dbSerial.flushOutput();                   //Finish transmitting
-  while (dbSerial.isReceiving()) delay(1);  //Finish receiving
-#endif
+  writeEEPROM(STRIP_BRIGHT, v);
 }
 
 void show() {
@@ -168,23 +162,6 @@ void show() {
   flush();
   strip[3]->show();
 }
-
-#ifdef USE_LAMPTEST
-void rainbowCycle() {
-  static uint16_t j = 0;
-  hsvColor_t c;
-  c.s = 0;
-  c.v = 255;
-  uint16_t i;
-  if (j == 360) j == 0;
-  for(i = 0; i < 32; i++) {
-    c.h = (j + (i * 45)) % 359;
-    setLedHsv(i, &c);
-  }
-  show();
-  j += 10;
-}
-#endif
 
 #endif
 

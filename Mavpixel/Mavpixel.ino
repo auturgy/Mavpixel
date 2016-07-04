@@ -136,6 +136,7 @@ FastSerialPort0(Serial);
 
 //LED strip IO Pins
 #ifdef LED_STRIP
+#define NEO_FLAGS NEO_GRB + NEO_KHZ800
 #define NEO_PIN1 14
 #define NEO_PIN2 15
 #define NEO_PIN3 16
@@ -196,7 +197,6 @@ void setup()
   // Read led strip configs from EEPROM
   lowBattPct = readEEPROM(LOWBATT_PCT);
   lowBattVolt = readEP16(LOWBATT_VOLT) / 1000.0f;
-  stripBright = readEEPROM(STRIP_BRIGHT);
   stripAnim = readEEPROM(STRIP_ANIM);
   minSats = readEEPROM(MIN_SATS);
   deadBand = readEEPROM(DEADBAND);
@@ -206,7 +206,7 @@ void setup()
   readColorConfigs();
   //Start the strip
   ledStripInit();
-  setBrightness(stripBright);  
+  setBrightness(readEEPROM(STRIP_BRIGHT));  
 #endif
 
   // Jani's debug stuff  
