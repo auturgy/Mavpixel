@@ -1,26 +1,25 @@
 /*
-///////////////////////////////////////////////////////////////////////
-//
-// Please read licensing, redistribution, modifying, authors and 
-// version numbering from main sketch file. This file contains only
-// a minimal header.
-//
-// Mavpixel Mavlink Neopixel bridge
-// (c) 2016 Nick Metcalfe
-//
-//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
-//  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED 
-//  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. 
-//  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
-//  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
-//  BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, 
-//  OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, 
-//  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
-//  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
-//  POSSIBILITY OF SUCH DAMAGE.
-//
-/////////////////////////////////////////////////////////////////////////////
-*/
+ * Mavpixel Mavlink Neopixel bridge
+ * (c) 2016 Nick Metcalfe
+ * This file is derived from jD-IOBoard_MAVlink.
+ *
+ * Mavpixel is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Please read licensing, redistribution, modifying, authors and 
+ * version numbering from main sketch file. This file contains only
+ * a minimal header.
+ *
+ * Mavpixel is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Mavpixel.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
 #define MAVLINK_COMM_NUM_BUFFERS 1
 #define MAVLINK_USE_CONVENIENCE_FUNCTIONS
@@ -75,7 +74,7 @@ void HeartBeat() {
     if (mavlinkTimeoutCounter >= MAVLINK_TIMEOUT) {
       if(mavlink_active) {
 #ifdef DEBUG
-        println(F("We lost MAVLink"));
+        dbln(F("We lost MAVLink"));
 #endif
         mavlink_active = 0;
         mavlinkTimeoutCounter = 0;
@@ -104,8 +103,8 @@ void mavSendData() {
 void request_mavlink_rates(uint8_t MAVStream, uint8_t MAVRate)
 {
 #ifdef DEBUG
-  print(F("Request stream: "));
-  println(MAVStream);
+  db(F("Request stream: "));
+  dbln(MAVStream);
 #endif
   mavlink_msg_request_data_stream_send(MAVLINK_COMM_0,
        apm_mav_system, apm_mav_component,
@@ -139,7 +138,10 @@ void read_mavlink(){
           case MAVLINK_MSG_ID_HEARTBEAT:
             {
 #ifdef DEBUG
-              println(F("MAVLink HeartBeat"));
+              db(F("MAVLink HeartBeat from sysid:"));
+              db(msg.sysid);
+              db(F(", compid:"));
+              dbln(msg.compid);
 #endif
               //Ignore heartbeats from other peripherals and groundstations
               if (msg.compid != MAV_COMP_ID_VEHICLE) break;
@@ -224,8 +226,9 @@ void read_mavlink(){
           case MAVLINK_MSG_ID_STATUSTEXT:
             {   
 #ifdef DEBUG
-             println(mavlink_msg_statustext_get_severity(&msg));
-             println((char*)(&_MAV_PAYLOAD(&msg)[1]));            //print directly from mavlink buffer            
+             db(mavlink_msg_statustext_get_severity(&msg));
+             db(F(": "));
+             dbln((char*)(&_MAV_PAYLOAD(&msg)[1]));            //print directly from mavlink buffer            
 #endif
             }  
             break;
@@ -233,6 +236,12 @@ void read_mavlink(){
 	    {
               mavlink_param_request_list_t request;
 	      mavlink_msg_param_request_list_decode(&msg, &request);
+#ifdef DEBUG
+              db(F("Param request list, sysid:"));
+              db(request.target_system);
+              db(F(", compid:"));
+              dbln(request.target_component);
+#endif
 	      // Check if this message is for this system
               if (request.target_system == mavlink_system.sysid 
                   && (request.target_component == mavlink_system.compid || request.target_component == 0))
@@ -244,6 +253,12 @@ void read_mavlink(){
 	    {
               mavlink_param_request_read_t request;
 	      mavlink_msg_param_request_read_decode(&msg, &request);
+#ifdef DEBUG
+              db(F("Param request read, sysid:"));
+              db(request.target_system);
+              db(F(", compid:"));
+              dbln(request.target_component);
+#endif
 	      // Check if this message is for this system
 	      if (request.target_system == mavlink_system.sysid
                   && (request.target_component == mavlink_system.compid || request.target_component == 0))
@@ -256,6 +271,12 @@ void read_mavlink(){
 	    {
               mavlink_mission_request_list_t request;
 	      mavlink_msg_mission_request_list_decode(&msg, &request);
+#ifdef DEBUG
+              db(F("Mission request, sysid:"));
+              db(request.target_system);
+              db(F(", compid:"));
+              dbln(request.target_component);
+#endif
 	      // Check if this message is for this system
 	      if (request.target_system == mavlink_system.sysid
                   && (request.target_component == mavlink_system.compid 
@@ -263,21 +284,18 @@ void read_mavlink(){
                   || request.target_component == MAV_COMP_ID_MISSIONPLANNER))
                 //Tell QGroundControl there is no mission
                 mavlink_msg_mission_count_send(MAVLINK_COMM_0,
-                  apm_mav_system,
-                  apm_mav_component,
+                  255, //MyGCS
+                  request.target_component,
                   0);
 	    }
 	    break;
           case MAVLINK_MSG_ID_PARAM_SET:
 	    {
               mavlink_param_set_t set;
-	      mavlink_msg_param_set_decode(&msg, &set);
- 
+	      mavlink_msg_param_set_decode(&msg, &set); 
 	      // Check if this message is for this system
 	      if (set.target_system == mavlink_system.sysid && set.target_component == mavlink_system.compid)
-              {
                 mavReceiveParameter(&set);
-              }
             }
             break;
           case MAVLINK_MSG_ID_PING:
@@ -285,7 +303,7 @@ void read_mavlink(){
               // process ping requests (tgt_system and tgt_comp must be zero)
               mavlink_ping_t ping;
               mavlink_msg_ping_decode(&msg, &ping);
-              if(ping.target_system == 0 && (ping.target_component == 0 || ping.target_component == mavlink_system.compid))
+              if(ping.target_system == 0 && ping.target_component == 0)
                 mavlink_msg_ping_send(MAVLINK_COMM_0, ping.time_usec, ping.seq, msg.sysid, msg.compid);
             }
             break;

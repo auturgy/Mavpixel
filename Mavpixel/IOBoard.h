@@ -1,26 +1,26 @@
 /*
-///////////////////////////////////////////////////////////////////////
-//
-// Please read licensing, redistribution, modifying, authors and 
-// version numbering from main sketch file. This file contains only
-// a minimal header.
-//
-// Mavpixel Mavlink Neopixel bridge
-// (c) 2016 Nick Metcalfe
-//
-//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
-//  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED 
-//  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. 
-//  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
-//  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
-//  BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, 
-//  OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, 
-//  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
-//  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
-//  POSSIBILITY OF SUCH DAMAGE.
-//
-/////////////////////////////////////////////////////////////////////////////
-*/
+ * Mavpixel Mavlink Neopixel bridge
+ * (c) 2016 Nick Metcalfe
+ * This file is derived from jD-IOBoard_MAVlink.
+ *
+ * Mavpixel is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Please read licensing, redistribution, modifying, authors and 
+ * version numbering from main sketch file. This file contains only
+ * a minimal header.
+ *
+ * Mavpixel is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Mavpixel.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 //
 // Mavpixel definitions
 // 4/6/2016
@@ -113,7 +113,7 @@ const char PROGMEM mav_color_P[] = "color_";
 
 //  Best leave heartbeat timer at one hz as it also times stream rate requests
 static uint32_t hbMillis = millis();            // HeartBeat timer
-#define HB_TIMER 1000                           //1hz
+#define HB_TIMER 1000                           //2hz
 
 //Parameter send timer
 static uint32_t parMillis = millis();           // Parameter timer
@@ -137,7 +137,7 @@ static uint16_t iob_old_mode = 0;
 static uint8_t  iob_state = 0;                  // APM State (Not ready to arm, Failsafe, etc..)
 static uint8_t  iob_satellites_visible = 0;     // number of satelites
 static uint8_t  iob_fix_type = 0;               // GPS lock 0-1=no fix, 2=2D, 3=3D
-static unsigned int iob_hdop=0;                 
+static uint16_t iob_hdop=0;                 
 static int16_t   iob_chan1 = 1500;              // Roll
 static int16_t   iob_chan2 = 1500;              // Pitch
 static uint16_t  iob_throttle = 0;              // Throttle

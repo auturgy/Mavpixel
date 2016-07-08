@@ -1,46 +1,46 @@
 /*
-///////////////////////////////////////////////////////////////////////
-Mavpixel Mavlink Neopixel bridge
-(c) 2016 Nick Metcalfe
+ * Mavpixel Mavlink Neopixel bridge
+ * (c) 2016 Nick Metcalfe
+ * https://github.com/prickle/Mavpixel/
+ *
+ * Derived from: jD-IOBoard_MAVlink Driver
+ * http://github.com/jdrones/jD-IOBoard
+ * Version      : v0.5-FrSky, 06-11-2013
+ * Copyright (c) 2013, Jani Hirvinen, jDrones & Co.
+ * All rights reserved.
+ * Author       : Jani Hirvinen, jani@j....com
+ * Co-Author(s) : 
+ *      Sandro Beningo     (MAVLink routines)
+ *      Mike Smith         (BetterStream and FastSerial libraries)
+ *
+ * Portions derived from Cleanflight.
+ * http://github.com/cleanflight/cleanflight
+ *
+ * Mavpixel is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * - Redistribution and use in source and binary forms, with or without 
+ *   modification, are permitted provided that the following conditions are met:
+ *
+ * - Redistributions of source code must retain the above copyright notice, this 
+ *  list of conditions and the following disclaimer.
+ *
+ * - Redistributions in binary form must reproduce the above copyright notice, 
+ *  this list of conditions and the following disclaimer in the documentation 
+ *  and/or other materials provided with the distribution.
+ *
+ *
+ * Mavpixel is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Mavpixel.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
-Derived from: jD-IOBoard_MAVlink Driver
-// Version      : v0.5-FrSky, 06-11-2013
-// Author       : Jani Hirvinen, jani@j....com
-// Co-Author(s) : 
-//      Sandro Beningo     (MAVLink routines)
-//      Mike Smith         (BetterStream and FastSerial libraries)
-
-
-
-// If you use, modify, redistribute, Remember to share your modifications and 
-// you need to include original authors along with your work !!
-//
-// Mavpixel Mavlink Neopixel bridge
-// (c) 2016 Nick Metcalfe
-//
-// - Redistribution and use in source and binary forms, with or without 
-//   modification, are permitted provided that the following conditions are met:
-//
-// - Redistributions of source code must retain the above copyright notice, this 
-//  list of conditions and the following disclaimer.
-//
-// - Redistributions in binary form must reproduce the above copyright notice, 
-//  this list of conditions and the following disclaimer in the documentation 
-//  and/or other materials provided with the distribution.
-//
-//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
-//  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED 
-//  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. 
-//  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
-//  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
-//  BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, 
-//  OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, 
-//  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
-//  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
-//  POSSIBILITY OF SUCH DAMAGE.
-//
-/////////////////////////////////////////////////////////////////////////////
-*/
  
 /*
 //////////////////////////////////////////////////////////////////////////
@@ -63,9 +63,6 @@ Derived from: jD-IOBoard_MAVlink Driver
 #undef PROGMEM 
 #define PROGMEM __attribute__(( section(".progmem.data") )) 
 
-#undef PSTR 
-#define PSTR(s) (__extension__({static prog_char __c[] PROGMEM = (s); &__c[0];})) 
-
 //Compilation switches
 #define MAVLINK10     // (Leave this as is!) Are we listening MAVLink 1.0 or 0.9   (0.9 is obsolete now)
 #define HEARTBEAT     // HeartBeat signal
@@ -73,7 +70,7 @@ Derived from: jD-IOBoard_MAVlink Driver
 #define SOFTSER       //Use SoftwareSerial as configuration port
 //#define DEBUG             //Output extra debug information 
 #define membug            //Check memory usage
-//#define DUMPVARS          //adds CLI command to dump mavlink variables 
+#define DUMPVARS          //adds CLI command to dump mavlink variables 
 #define LED_STRIP         //Can compile without LED controller if desired
 #define USE_LED_GPS       //Include LED GPS function
 #define USE_LED_ANIMATION //Include LED animation while disarmed effect
@@ -82,9 +79,6 @@ Derived from: jD-IOBoard_MAVlink Driver
 /* **********************************************/
 /* ***************** INCLUDES *******************/
 
-#define hiWord(w) ((w) >> 8)
-#define loWord(w) ((w) & 0xff)
-
 // AVR Includes
 #include <FastSerial.h>
 #include <AP_Common.h>
@@ -92,7 +86,6 @@ Derived from: jD-IOBoard_MAVlink Driver
 #include <math.h>
 #include <inttypes.h>
 #include <avr/pgmspace.h>
-#include <avr/wdt.h>
 
 // Get the common arduino functions
 #if defined(ARDUINO) && ARDUINO >= 100
@@ -144,14 +137,21 @@ FastSerialPort0(Serial);
 Adafruit_NeoPixel* strip[4];
 #endif
 
+//Printing shortcuts
+//Stream output
 #define outln(data, stream) stream->println(data)
 #define out(data, stream) stream->print(data)
 #define outlf(stream) stream->println()
+//Debug and both streams output
 #ifdef SOFTSER
 AltSoftSerial dbSerial;        // AltSoftSerial always uses pins 9, 8
+#define dbln(data) dbSerial.println(data)
+#define db(data) dbSerial.print(data)
 #define bothln(data) {dbSerial.println(data); Serial.println(data);}
 #define both(data) {dbSerial.print(data); Serial.print(data);}
 #else
+#define dbln(data) Serial.println(data)
+#define db(data) Serial.print(data)
 #define bothln(data) Serial.println(data)
 #define both(data) Serial.print(data)
 #endif
@@ -183,18 +183,14 @@ void setup()
   cliSoftser.stream = &dbSerial;
 #endif
 
-
-//  Stream *mySerial = &dbSerial;
-  
-//  mySerial->println("Testing..");
-  //print & println functions ready
+  //printing functions ready
   bothln(F("\r\nMavpixel " VER " initialised."));
   if (eeReset) bothln(F("Factory Reset."));
   // setup mavlink port (just one)
   mavlink_comm_0_port = &Serial;
 
-#ifdef LED_STRIP
   // Read led strip configs from EEPROM
+#ifdef LED_STRIP
   lowBattPct = readEEPROM(LOWBATT_PCT);
   lowBattVolt = readEP16(LOWBATT_VOLT) / 1000.0f;
   stripAnim = readEEPROM(STRIP_ANIM);
