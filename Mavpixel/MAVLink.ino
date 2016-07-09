@@ -470,7 +470,7 @@ void mavSendParameter(int16_t index) {
     //Colour palette - sent as 4 byte Hue(2):Sat(1):Val(1) 
     else if (index >= 67 && index < 83) {
 #ifdef LED_STRIP
-        mavlinkSendParam(mav_color_P, index - 67, index, *(float*)(&colors[index - 67]));
+        mavlinkSendParam(mav_color_P, index - 67, index, *(float*)(colors[index - 67]));
 #else  //LED_STRIP disabled, send dummy values
         mavlinkSendParam(mav_color_P, index - 67, index, 0);
 #endif

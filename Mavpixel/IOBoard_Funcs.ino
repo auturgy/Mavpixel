@@ -21,8 +21,6 @@
  * along with Mavpixel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/////////////////////////////////////////////////////////////////////////////
-*/
 //Mavpixel general funcion calls
 
 //Change Mavlink baud rate
