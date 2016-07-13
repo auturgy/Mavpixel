@@ -117,7 +117,7 @@ void writeFactorySettings() {
  writeEP16(SOFTSER_BAUD, 240);  // b/10
  writeEEPROM(MIN_SATS, 6);
  writeEEPROM(DEADBAND, 40);
- writeEEPROM(SYS_ID, 1);
+ writeEEPROM(SYS_ID, 2);
  writeEEPROM(HEARTBEAT_EN, 0);
 
  // Write details for versioncheck to EEPROM
@@ -135,18 +135,21 @@ boolean checkEeprom() {
   uint8_t ver_major = readEEPROM(VERMAJ);
   uint8_t ver_minor = readEEPROM(VERMIN);
   if(ver_major != CHKMAJ ||  ver_minor < CHKMIN || readEEPROM(FACTORY_RESET)) {
-/*  Not needed yet..  
-    if (ver_major == CHKMAJ && ver_minor + 1 == CHKMIN) {
-    //if required we can upgrade the EEPROM from previous version here
-      
+    if (CHKMAJ == ver_major == 2 && CHKMIN == ver_minor + 1 == 1 && !readEEPROM(FACTORY_RESET)) {
+      //if required we can upgrade the EEPROM from version 2.0 version here
+      writeEEPROM(SYS_ID, 2);
+      writeEEPROM(HEARTBEAT_EN, 0);
+      // Write details for versioncheck to EEPROM
+      writeEEPROM(VERMIN, CHKMIN);
+      writeEEPROM(VERMAJ, CHKMAJ);
+      writeEEPROM(VERS, CHKMAJ * 10 + CHKMIN);
       return false;
     }
-    else
-*/
     // Write factory settings on EEPROM
     writeFactorySettings();
     return true;
   }
+  return false;
 }
 
 //Parameter setters

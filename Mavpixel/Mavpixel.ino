@@ -112,9 +112,9 @@
 /* *************************************************/
 /* ***************** DEFINITIONS *******************/
 
-#define VER "2.0"   // Software version
+#define VER "2.1"   // Software version
 #define CHKMAJ 2    // Major version number to check from EEPROM
-#define CHKMIN 0    // Minor version number to check from EEPROM
+#define CHKMIN 1    // Minor version number to check from EEPROM
 float mavpixelVersion = CHKMAJ + (float)(CHKMIN / 10);
 #define ledPin 13     // Blinky LED if any
 
