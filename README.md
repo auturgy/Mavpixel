@@ -1,7 +1,7 @@
 Mavpixel
 ========
 
-* Under Construction.. *
+*Under Construction..*
 
 Mavpixel brings Cleanflight-style LED strip functionality to the APM project.
 
@@ -32,7 +32,7 @@ For ease of use the simple configuration application MavpixelGUI is also provide
 
 Some ground stations are able to configure Mavpixel's basic parameters from within the ground station itself but due to what is currently somewhat poor support in many ground stations for Mavlink peripherals this feature has been left disabled by default. To try it out, enable 'heartbeats' in the Mavpixel's settings.
 
-** Quick start guide **
+**Quick start guide**
 
 **Step 1)** Obtain hardware
 This application currently supports Mavpixel on Arduino Pro Mini.
@@ -67,13 +67,13 @@ Connect a spare telemetry port on the flight controller to the Mavpixel's serial
 
 Use MavpixelGUI to connect directly to the flight controller's serial or network port for quick online setup. Note that changes made in the GUI are activated on the Mavpixel only after the Send button at the bottom of the window is pressed.
 
-** Developer notes **
+**Developer notes**
 
 Mavpixel is a regular Arduino sketch that can be opened, compiled and uploaded with the Arduino IDE version 1.0.6. Later versions will not work with the FastSerial libraries. Broad compilation options can be found near the top of Mavpixel.ino. Program constants holding Mavpixel's identity and characteristics are in IOBoard.h. Factory defaults are in IO_EEPROM.ino. Mavlink heartbeat, rate requests, reader and parameter getter/setters are all in MAVLink.ino.
 
 The Arduino IDE's Serial Monitor works well with Mavpixel. Set line endings to 'Both NL & CR' and (by default) connect at 57600 baud.
 
-** Acknowledgements **
+**Acknowledgements**
 
 Mavpixel would like to thank it's creators, authors and contributors. In particular:
 
