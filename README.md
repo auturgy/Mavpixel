@@ -34,9 +34,9 @@ Some ground stations are able to configure Mavpixel's basic parameters from with
 
 **Quick start guide**
 
-**Step 1)** Obtain hardware
-This application currently supports Mavpixel on Arduino Pro Mini.
+**Step 1)** Obtain hardware.
 
+This application currently supports Mavpixel on Arduino Pro Mini. 
 Obtain an Arduino Pro Mini 5v 16Mhz board along with an FTDI programmer.
 
 **Step 2)** Download and start MavpixelGUI.
@@ -44,7 +44,7 @@ Obtain an Arduino Pro Mini 5v 16Mhz board along with an FTDI programmer.
 MavpixelGUI is used to prepare and configure Arduino boards to become Mavpixels.
 Download from [here](http://github.com/prickle/MavpixelGUI/releases)
 
-The source code and firmware files for MavpixelGUI can be found at http://github.com/prickle/MavpixelGUI
+The latest source code for MavpixelGUI can be found at http://github.com/prickle/MavpixelGUI
 
 **Step 3)** Flash the Mavpixel firmware.
 
@@ -52,16 +52,16 @@ Connect the Arduino Pro Mini using an FTDI programmer to a USB port. Use the Fir
 
 The source code and firmware files for Mavpixel can be found at http://github.com/prickle/Mavpixel
 
-**Step 4)** Connect the LEDs
-Mavpixel currently supports WS2812 LED strips in lengths of no more than eight.
+**Step 4)** Connect the LEDs.
 
+Mavpixel currently supports WS2812 LED strips in lengths of no more than eight.
 Four LED strip outputs are available which can drive up to eight LEDs each, giving a maximum of 32 LEDs. This configuration was used due to Arduino hardware limitations that prevented driving one long strip.
 
 Power for the strips should be taken from a dedicated 5 volt UBEC or from the flight controller's servo rail if enough current is available. Do not try to power the strips from the Mavpixel as they may try to draw too much power from the USB connection and fry the flight controller.
 
 **Step 5)** Connect to the flight controller
 
-Connect a spare telemetry port on the flight controller to the Mavpixel's serial port throug it's programming connector using four wires +5v, gnd, TxD->RxD and RxD->TxD. Power for the Mavpixel is taken from the flight controller so it is powered and configurable when the vehicle is connected to USB.
+Connect a spare telemetry port on the flight controller to the Mavpixel's serial port through it's programming connector using four wires +5v, gnd, TxD->RxD and RxD->TxD. Power for the Mavpixel is taken from the flight controller so it is powered and configurable when the vehicle is connected to USB.
 
 **Step 6)** Configure the Mavpixel
 
@@ -87,7 +87,15 @@ The disadvantage of a half-duplex connection is being unable to configure Mavpix
 
 With a half-duplex connection the TxD line from the Mavpixel to the flight controller is left out. `SRx` settings on the flight controller will then need to be set manually to `SRx_EXT_STAT = 2`, `SRx_EXTRA_2 = 5`, and `SRx_RC_CHAN = 5` or Mavpixel will not react if a ground station is not connected.
 
-With this setup Mavpixel configuration can be done live through Mavpixel's secondary configuration port. Connect an FTDI or equivalent USB-to-serial converter's TxD to Mavpixel pin 8, RxD to pin 9 and GND to a spare ground pin. Open the port with a terminal or MavpixelGUI at 2400 baud for full configuration access.
+**Software Serial configuration port**
+
+When Mavlink configuration is unavailable or CLI access is desired while Mavlink is connected, Mavpixel configuration can be done live through Mavpixel's secondary Software Serial configuration port. 
+
+Connect an FTDI or equivalent USB-to-serial converter's TxD to Mavpixel pin 8, RxD to pin 9 and GND to a spare ground pin. The Arduino Pro Mini's FTDI programmer is perfectly suitable for this. Open the port with a terminal or MavpixelGUI at 2400 baud for full configuration access.
+
+Although it is possible to increase the speed of the Software Serial configuration port up to 38400 baud it is recommended to keep it at 2400 baud to ensure reliability as it has a tendency to drop bits at higher rates. 
+
+This is due to hardware limitations. Software Serial is interrupt driven and needs to catch every bit in the serial data stream. Because of the tight timing requirements of the LED strips they can disable interrupts for longer than a fast serial bit time. This causes occasional bits to be lost from the serial data stream and sometimes corrupts the message. Keeping the Software Serial baud rate low ensures serial data bit transitions are not missed.
 
 **Developer notes**
 
