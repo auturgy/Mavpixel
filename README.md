@@ -61,11 +61,33 @@ Power for the strips should be taken from a dedicated 5 volt UBEC or from the fl
 
 **Step 5)** Connect to the flight controller
 
-Connect a spare telemetry port on the flight controller to the Mavpixel's serial port throug it's programming connector using four wires +5v, gnd, txd->rxd and rxd->txd. Power for the Mavpixel is taken from the flight controller so it is powered and configurable when the vehicle is connected to USB.
+Connect a spare telemetry port on the flight controller to the Mavpixel's serial port throug it's programming connector using four wires +5v, gnd, TxD->RxD and RxD->TxD. Power for the Mavpixel is taken from the flight controller so it is powered and configurable when the vehicle is connected to USB.
 
 **Step 6)** Configure the Mavpixel
 
 Use MavpixelGUI to connect directly to the flight controller's serial or network port for quick online setup. Note that changes made in the GUI are activated on the Mavpixel only after the Send button at the bottom of the window is pressed.
+
+**Troubleshooting**
+
+First check to see if Mavpixel can hear Mavlink. This is done by examining the Mavpixel's onboard status LED. A rapid flashing (5 Hz) means no Mavlink is being received. A slower flash (1 Hz) is what you want to see. Note that the flight controller takes a few seconds after booting before it begins emitting Mavlink messages so be patient.
+
+If Mavpixel indicates there is no Mavlink, confirm your flight controller's `SERIALx` settings on the appropriate port (i.e. `SERIAL2` for Telem 2 port). These should be set to `SERIAL_BAUD = 57` and `SERIAL_PROTOCOL = 1`. Still no luck? Double check all connections between Mavpixel and the flight controller.
+
+If Mavpixel indicates Mavlink is being received but the LEDs are not reacting, check the flight controller's `SRx` setting for the port Mavpixel is connected to (i.e. `SR2` for Telem 2). Mavpixel sets these Stream Rate parameters itself, so if Mavlink communication is working in both directions one should see `SRx_EXT_STAT = 2`, `SRx_EXTRA_2 = 5`, and `SRx_RC_CHAN = 5`.
+
+All other `SRx` settings should be 0 as Mavpixel does not use them. If they are not, it could be settings left over from a MinimOSD or the like. Try setting all `SRx` values to 0, wait a moment, then refresh params. Mavpixel should have set it's three `SRx` parameters back to 2, 5 and 5.
+
+If `SRx` parameters do not change or stay at 0, Mavpixel cannot talk back to the flight controller. Check the telemetry port connections again.
+
+No luck? If necessary Mavpixel can operate on a half-duplex connection. 
+
+**Half duplex connection**
+
+The disadvantage of a half-duplex connection is being unable to configure Mavpixel through Mavlink. The advantage is being able to piggyback off another telemetry connection, for instance a SiK radio, and not require a dedicated serial port.
+
+With a half-duplex connection the TxD line from the Mavpixel to the flight controller is left out. `SRx` settings on the flight controller will then need to be set manually to `SRx_EXT_STAT = 2`, `SRx_EXTRA_2 = 5`, and `SRx_RC_CHAN = 5` or Mavpixel will not react if a ground station is not connected.
+
+With this setup Mavpixel configuration can be done live through Mavpixel's secondary configuration port. Connect an FTDI or equivalent USB-to-serial converter's TxD to Mavpixel pin 8, RxD to pin 9 and GND to a spare ground pin. Open the port with a terminal or MavpixelGUI at 2400 baud for full configuration access.
 
 **Developer notes**
 
