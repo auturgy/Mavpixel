@@ -32,6 +32,10 @@ For ease of use the simple configuration application MavpixelGUI is also provide
 
 Some ground stations are able to configure Mavpixel's basic parameters from within the ground station itself but due to what is currently somewhat poor support in many ground stations for Mavlink peripherals this feature has been left disabled by default. To try it out, enable 'heartbeats' in the Mavpixel's settings.
 
+**Basic system diagram**
+
+![Mavpixel wiring diagram](https://github.com/prickle/Mavpixel/raw/master/images/Mavpixel_wiring.png)
+
 **Quick start guide**
 
 **Step 1)** Obtain hardware.
@@ -92,6 +96,8 @@ With a half-duplex connection the TxD line from the Mavpixel to the flight contr
 **Software Serial configuration port**
 
 When Mavlink configuration is unavailable or CLI access is desired while Mavlink is connected, Mavpixel configuration can be done live through Mavpixel's secondary Software Serial configuration port. 
+
+![Software Serial wiring diagram](https://github.com/prickle/Mavpixel/raw/master/images/Mavpixel_softserial.png)
 
 Connect an FTDI or equivalent USB-to-serial converter's TxD to Mavpixel pin 8, RxD to pin 9 and GND to a spare ground pin. The Arduino Pro Mini's FTDI programmer is perfectly suitable for this. Open the port with a terminal or MavpixelGUI at 2400 baud for full configuration access.
 
