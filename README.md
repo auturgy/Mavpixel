@@ -36,6 +36,8 @@ Some ground stations are able to configure Mavpixel's basic parameters from with
 
 ![Mavpixel wiring diagram](https://github.com/prickle/Mavpixel/raw/master/images/Mavpixel_wiring.png)
 
+*Diagram Notes: Mavpixel can use Telem 1, Telem 2, Serial 4 or 5. Only use servo rail power if enough current is available.*
+
 **Quick start guide**
 
 **Step 1)** Obtain hardware.
@@ -61,7 +63,9 @@ The source code and firmware files for Mavpixel can be found at http://github.co
 Mavpixel currently supports WS2812 LED strips in lengths of no more than eight.
 Four LED strip outputs are available which can drive up to eight LEDs each, giving a maximum of 32 LEDs. This configuration was used due to Arduino hardware limitations that prevented driving one long strip.
 
-Power for the strips should be taken from a dedicated 5 volt UBEC or from the flight controller's servo rail if enough current is available. Do not try to power the strips from the Mavpixel as they may try to draw too much power from the USB connection and fry the flight controller.
+Power for the strips should be taken from a dedicated 5 volt UBEC or from the flight controller's servo rail if enough current is available. Do not try to power the strips from the Mavpixel as they may try to draw too much power from the USB connection and fry the flight controller. 
+
+The LED strips require up to two amps at 5 volts for all 32 LEDs at full brightness white, usually much less but the overhead needs to be there or problems will ensue.
 
 Run the data line from each strip to the Mavpixel pins A1(leds 0-7), A2(leds 8-15), A3(leds 16-23), and A4(leds 24-31).
 
@@ -75,6 +79,8 @@ Use MavpixelGUI to connect directly to the flight controller's serial or network
 
 **Troubleshooting**
 
+*No Reactions - communication problems
+
 First check to see if Mavpixel can hear Mavlink. This is done by examining the Mavpixel's onboard status LED. A rapid flashing (5 Hz) means no Mavlink is being received. A slower flash (1 Hz) is what you want to see. Note that the flight controller takes a few seconds after booting before it begins emitting Mavlink messages so be patient.
 
 If Mavpixel indicates there is no Mavlink, confirm your flight controller's `SERIALx` settings on the appropriate port (i.e. `SERIAL2` for Telem 2 port). These should be set to `SERIAL_BAUD = 57` and `SERIAL_PROTOCOL = 1`. Still no luck? Double check all connections between Mavpixel and the flight controller.
@@ -86,6 +92,14 @@ All other `SRx` settings should be 0 as Mavpixel does not use them. If they are 
 If `SRx` parameters do not change or stay at 0, Mavpixel cannot talk back to the flight controller. Check the telemetry port connections again.
 
 No luck? If necessary Mavpixel can operate on a half-duplex connection. 
+
+*Flickering/odd colours - power supply probems
+
+The LED strips require up to two amps at 5 volts for all 32 LEDs at full brightness white. If the current draw cannot be satisfied the voltage will droop and the LEDs will start to misbehave.
+
+Try reducing the brightness in Mavpixel's settings. This also reduces the current draw. If the LEDs start acting normally then the LED's power supply cannot provide enough current.
+
+If reducing brightness does not help there could be issues from radiated noise, voltage drop, ground loops or the like. Get in touch if you are experience something like this.
 
 **Half duplex connection**
 
