@@ -63,7 +63,7 @@ Four LED strip outputs are available which can drive up to eight LEDs each, givi
 
 Power for the strips should be taken from a dedicated 5 volt UBEC or from the flight controller's servo rail if enough current is available. Do not try to power the strips from the Mavpixel as they may try to draw too much power from the USB connection and fry the flight controller.
 
-Run the data line from each strip to the Mavpixel pins A1(leds 1-7), A2(leds 8-15), A3(leds16-23), and A4(leds 24-31).
+Run the data line from each strip to the Mavpixel pins A1(leds 0-7), A2(leds 8-15), A3(leds 16-23), and A4(leds 24-31).
 
 **Step 5)** Connect to the flight controller
 
