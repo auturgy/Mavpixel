@@ -7,6 +7,8 @@ Mavpixel brings Cleanflight-style LED strip functionality to the APM project.
 
 Mavpixel is a LED strip controller designed as a companion for APM, Pixhawk and other Mavlink-compatible flight controllers. Based on simple, inexpensive hardware, Mavpixel is a well-featured complete LED lighting solution for larger UAVs.
 
+![Mavpixel](https://github.com/prickle/Mavpixel/raw/master/images/pixfull.jpg)
+
 Mavpixel uses no special hardware. An Arduino Pro Mini with programmer, some WS2812 LED strips and a handfull of wire is all the hardware required.
 
 Mavpixel can control up to 32 RGB LEDs, with functions including: 
@@ -32,13 +34,13 @@ For ease of use the simple configuration application MavpixelGUI is also provide
 
 Some ground stations are able to configure Mavpixel's basic parameters from within the ground station itself but due to what is currently somewhat poor support in many ground stations for Mavlink peripherals this feature has been left disabled by default. To try it out, enable 'heartbeats' in the Mavpixel's settings.
 
-**Basic system diagram**
+##Basic system diagram
 
 ![Mavpixel wiring diagram](https://github.com/prickle/Mavpixel/raw/master/images/Mavpixel_wiring.png)
 
-*Diagram Notes: Mavpixel can use Telem 1, Telem 2, Serial 4 or 5. Only use servo rail power if enough current is available.*
+**Diagram Notes: Mavpixel can use Telem 1, Telem 2, Serial 4 or 5. Only use servo rail power if enough current is available.**
 
-**Quick start guide**
+##Quick start guide
 
 **Step 1)** Obtain hardware.
 
@@ -69,17 +71,31 @@ The LED strips require up to two amps at 5 volts for all 32 LEDs at full brightn
 
 Run the data line from each strip to the Mavpixel pins A1(leds 0-7), A2(leds 8-15), A3(leds 16-23), and A4(leds 24-31).
 
+![Mavpixel close up](https://github.com/prickle/Mavpixel/raw/master/images/pixortho.jpg)
+
+Here is an example of an easy wiring solution that uses a 3-row by 8-pin straight header that some of us may have lying around from an old build as they are often provided as motor connector options on other flight controllers. Only five pins are really needed, four for the strips and one for LED power input. This allows simple servo extension leads to be used for LED strip wiring. The top (Gnd) and middle (+5v) rows have all been bridged over to carry power to the LED strips.
+
+![Led strip close up](https://github.com/prickle/Mavpixel/raw/master/images/pixledstrip.jpg)
+
+At the LED strip end solder on a 3-pin header to match the servo plug. Be sure to use an arrangement that puts +5v on the middle pin.
+
 **Step 5)** Connect to the flight controller
 
 Connect a spare telemetry port on the flight controller to the Mavpixel's serial port through it's programming connector using four wires +5v, gnd, TxD->RxD and RxD->TxD. Power for the Mavpixel is taken from the flight controller so it is powered and configurable when the vehicle is connected to USB.
+
+![Mavpixel Telemetry](https://github.com/prickle/Mavpixel/raw/master/images/pixmavlink.jpg)
+
+As the connections are grouped together a 4-pin plug is perfect. As this connector is also used to flash new firmware it is probably a good idea to have it somewhat accessible.
 
 **Step 6)** Configure the Mavpixel
 
 Use MavpixelGUI to connect directly to the flight controller's serial or network port for quick online setup. Note that changes made in the GUI are activated on the Mavpixel only after the Send button at the bottom of the window is pressed.
 
-**Troubleshooting**
+For instructions on using MavpixelGUI, see [here](https://github.com/prickle/MavpixelGUI).
 
-*No Reactions - communication problems
+##Troubleshooting
+
+**No Reactions - communication problems**
 
 First check to see if Mavpixel can hear Mavlink. This is done by examining the Mavpixel's onboard status LED. A rapid flashing (5 Hz) means no Mavlink is being received. A slower flash (1 Hz) is what you want to see. Note that the flight controller takes a few seconds after booting before it begins emitting Mavlink messages so be patient.
 
@@ -93,7 +109,7 @@ If `SRx` parameters do not change or stay at 0, Mavpixel cannot talk back to the
 
 No luck? If necessary Mavpixel can operate on a half-duplex connection. 
 
-*Flickering/odd colours - power supply probems
+**Flickering/odd colours - power supply problems**
 
 The LED strips require up to two amps at 5 volts for all 32 LEDs at full brightness white. If the current draw cannot be satisfied the voltage will droop and the LEDs will start to misbehave.
 
@@ -101,13 +117,13 @@ Try reducing the brightness in Mavpixel's settings. This also reduces the curren
 
 If reducing brightness does not help there could be issues from radiated noise, voltage drop, ground loops or the like. Get in touch if you are experience something like this.
 
-**Half duplex connection**
+##Half duplex connection
 
 The disadvantage of a half-duplex connection is being unable to configure Mavpixel through Mavlink. The advantage is being able to piggyback off another telemetry connection, for instance a SiK radio, and not require a dedicated serial port.
 
 With a half-duplex connection the TxD line from the Mavpixel to the flight controller is left out. `SRx` settings on the flight controller will then need to be set manually to `SRx_EXT_STAT = 2`, `SRx_EXTRA_2 = 5`, and `SRx_RC_CHAN = 5` or Mavpixel will not react if a ground station is not connected.
 
-**Software Serial configuration port**
+##Software Serial configuration port
 
 When Mavlink configuration is unavailable or CLI access is desired while Mavlink is connected, Mavpixel configuration can be done live through Mavpixel's secondary Software Serial configuration port. 
 
@@ -119,13 +135,13 @@ Although it is possible to increase the speed of the Software Serial configurati
 
 This is due to hardware limitations. Software Serial is interrupt driven and needs to catch every bit in the serial data stream. Because of the tight timing requirements of the LED strips they can disable interrupts for longer than a fast serial bit time. This causes occasional bits to be lost from the serial data stream and sometimes corrupts the message. Keeping the Software Serial baud rate low ensures serial data bit transitions are not missed.
 
-**Developer notes**
+##Developer notes
 
 Mavpixel is a regular Arduino sketch that can be opened, compiled and uploaded with the Arduino IDE version 1.0.6. Later versions will not work with the FastSerial libraries. Broad compilation options can be found near the top of Mavpixel.ino. Program constants holding Mavpixel's identity and characteristics are in IOBoard.h. Factory defaults are in IO_EEPROM.ino. Mavlink heartbeat, rate requests, reader and parameter getter/setters are all in MAVLink.ino.
 
 The Arduino IDE's Serial Monitor works well with Mavpixel. Set line endings to 'Both NL & CR' and (by default) connect at 57600 baud.
 
-**Acknowledgements**
+##Acknowledgements
 
 Mavpixel would like to thank it's creators, authors and contributors. In particular:
 
