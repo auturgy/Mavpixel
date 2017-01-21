@@ -65,9 +65,9 @@ The source code and firmware files for Mavpixel can be found at http://github.co
 Mavpixel currently supports WS2812 LED strips in lengths of no more than eight.
 Four LED strip outputs are available which can drive up to eight LEDs each, giving a maximum of 32 LEDs. This configuration was used due to Arduino hardware limitations that prevented driving one long strip.
 
-Power for the strips should be taken from a dedicated 5 volt UBEC or from the flight controller's servo rail if enough current is available. Do not try to power the strips from the Mavpixel as they may try to draw too much power from the USB connection and fry the flight controller. 
+Power for the strips should be taken from a dedicated 5 volt UBEC or from the flight controller's servo rail if enough current is available. Do not try to power the strips from the Mavpixel as they may try to draw too much power from the USB/Serial connection and fry the flight controller. 
 
-The LED strips require up to two amps at 5 volts for all 32 LEDs at full brightness white, usually much less but the overhead needs to be there or problems will ensue.
+The LED strips require up to two amps at 5 volts for all 32 LEDs at full brightness white, usually much less but the overhead needs to be there or problems will likely ensue.
 
 Run the data line from each strip to the Mavpixel pins A1(leds 0-7), A2(leds 8-15), A3(leds 16-23), and A4(leds 24-31).
 
@@ -107,7 +107,7 @@ All other `SRx` settings should be 0 as Mavpixel does not use them. If they are 
 
 If `SRx` parameters do not change or stay at 0, Mavpixel cannot talk back to the flight controller. Check the telemetry port connections again.
 
-No luck? If necessary Mavpixel can operate on a half-duplex connection. 
+No luck? If necessary Mavpixel can operate on a half-duplex connection. See below. 
 
 **Flickering/odd colours - power supply problems**
 
@@ -119,7 +119,7 @@ If reducing brightness does not help there could be issues from radiated noise, 
 
 ##Half duplex connection
 
-The disadvantage of a half-duplex connection is being unable to configure Mavpixel through Mavlink. The advantage is being able to piggyback off another telemetry connection, for instance a SiK radio, and not require a dedicated serial port.
+The disadvantage of a half-duplex connection is being unable to configure Mavpixel through Mavlink. The big advantage is being able to piggyback off another telemetry connection, for instance a SiK radio, and not require a dedicated serial port.
 
 With a half-duplex connection the TxD line from the Mavpixel to the flight controller is left out. `SRx` settings on the flight controller will then need to be set manually to `SRx_EXT_STAT = 2`, `SRx_EXTRA_2 = 5`, and `SRx_RC_CHAN = 5` or Mavpixel will not react if a ground station is not connected.
 
@@ -134,6 +134,12 @@ Connect an FTDI or equivalent USB-to-serial converter's TxD to Mavpixel pin 8, R
 Although it is possible to increase the speed of the Software Serial configuration port up to 38400 baud it is recommended to keep it at 2400 baud to ensure reliability as it has a tendency to drop bits at higher rates. 
 
 This is due to hardware limitations. Software Serial is interrupt driven and needs to catch every bit in the serial data stream. Because of the tight timing requirements of the LED strips they can disable interrupts for longer than a fast serial bit time. This causes occasional bits to be lost from the serial data stream and sometimes corrupts the message. Keeping the Software Serial baud rate low ensures serial data bit transitions are not missed.
+
+##More LEDs
+
+If 32 LEDs is not enough consider that multiple Mavpixels can be connected to a single flight controller. Each Mavpixel will operate independently, listening and reacting to Mavlink messages. If Mavpixel configuration over Mavlink is desired a full duplex connection, that is a dedicated serial port for each Mavpixel is required. In this case each Mavpixel should be configured with a unique System ID so it can be individually addressed over Mavlink.
+
+It is however, possible to connect multiple Mavpixels to a single serial port using a half-duplex connection. There is no limit to the number of Mavpixels and hence the number of LEDs that can be controlled this way other than practical considerations like space and power consumption. The serial port can still be shared with other Mavlink peripherals like OSD or telemetry.
 
 ##Developer notes
 
