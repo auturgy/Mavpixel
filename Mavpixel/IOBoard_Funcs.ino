@@ -116,7 +116,8 @@ void read_softser(){
 
 // Our generic flight modes for ArduCopter & ArduPlane
 void CheckFlightMode() {
-  if(apm_mav_type == 2) { // ArduCopter MultiRotor or ArduCopter Heli
+  if(apm_mav_type == 2 || apm_mav_type == 3 || apm_mav_type == 4 //Quadrotor, Coaxial, Helicopter
+      || apm_mav_type == 13 || apm_mav_type == 14 || apm_mav_type == 15) { //Hex, Octo, Tri
     if(iob_mode == 0) {flMode = STAB;}   // Stabilize
     if(iob_mode == 1) {flMode = ACRO;}   // Acrobatic
     if(iob_mode == 2) {flMode = ALTH;}   // Alt Hold
@@ -134,7 +135,7 @@ void CheckFlightMode() {
     if(iob_mode == 17) {flMode = BRAK;}  // Brake
     if(iob_mode == 18) {flMode = THRO;}  // Throw
   }
-  else if(apm_mav_type == 1) { // ArduPlane
+  else if(apm_mav_type == 1 || apm_mav_type == 19 || apm_mav_type == 20 || apm_mav_type == 21) { //Plane, VTOL
     if(iob_mode == 2 ) {flMode = STAB;}  // Stabilize
     if(iob_mode == 0) {flMode = MANU;}   // Manual
     if(iob_mode == 12) {flMode = LOIT;}  // Loiter
