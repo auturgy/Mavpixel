@@ -34,13 +34,13 @@ For ease of use the simple configuration application MavpixelGUI is also provide
 
 Some ground stations are able to configure Mavpixel's basic parameters from within the ground station itself but due to what is currently somewhat poor support in many ground stations for Mavlink peripherals this feature has been left disabled by default. To try it out, enable 'heartbeats' in the Mavpixel's settings.
 
-##Basic system diagram
+## Basic system diagram
 
 ![Mavpixel wiring diagram](https://github.com/prickle/Mavpixel/raw/master/images/Mavpixel_wiring.png)
 
 **Diagram Notes: Mavpixel can use Telem 1, Telem 2, Serial 4 or 5. Only use servo rail power if enough current is available.**
 
-##Quick start guide
+## Quick start guide
 
 **Step 1)** Obtain hardware.
 
@@ -93,7 +93,7 @@ Use MavpixelGUI to connect directly to the flight controller's serial or network
 
 For instructions on using MavpixelGUI, see [here](https://github.com/prickle/MavpixelGUI).
 
-##Troubleshooting
+## Troubleshooting
 
 **No Reactions - communication problems**
 
@@ -117,13 +117,13 @@ Try reducing the brightness in Mavpixel's settings. This also reduces the curren
 
 If reducing brightness does not help there could be issues from radiated noise, voltage drop, ground loops or the like. Get in touch if you are experience something like this.
 
-##Half duplex connection
+## Half duplex connection
 
 The disadvantage of a half-duplex connection is being unable to configure Mavpixel through Mavlink. The big advantage is being able to piggyback off another telemetry connection, for instance a SiK radio, and not require a dedicated serial port.
 
 With a half-duplex connection the TxD line from the Mavpixel to the flight controller is left out. `SRx` settings on the flight controller will then need to be set manually to `SRx_EXT_STAT = 2`, `SRx_EXTRA_2 = 5`, and `SRx_RC_CHAN = 5` or Mavpixel will not react if a ground station is not connected.
 
-##Software Serial configuration port
+## Software Serial configuration port
 
 When Mavlink configuration is unavailable or CLI access is desired while Mavlink is connected, Mavpixel configuration can be done live through Mavpixel's secondary Software Serial configuration port. 
 
@@ -135,19 +135,19 @@ Although it is possible to increase the speed of the Software Serial configurati
 
 This is due to hardware limitations. Software Serial is interrupt driven and needs to catch every bit in the serial data stream. Because of the tight timing requirements of the LED strips they can disable interrupts for longer than a fast serial bit time. This causes occasional bits to be lost from the serial data stream and sometimes corrupts the message. Keeping the Software Serial baud rate low ensures serial data bit transitions are not missed.
 
-##More LEDs
+## More LEDs
 
 If 32 LEDs is not enough consider that multiple Mavpixels can be connected to a single flight controller. Each Mavpixel will operate independently, listening and reacting to Mavlink messages. If Mavpixel configuration over Mavlink is desired a full duplex connection, that is a dedicated serial port for each Mavpixel is required. In this case each Mavpixel should be configured with a unique System ID so it can be individually addressed over Mavlink.
 
 It is however, possible to connect multiple Mavpixels to a single serial port using a half-duplex connection. There is no limit to the number of Mavpixels and hence the number of LEDs that can be controlled this way other than practical considerations like space and power consumption. The serial port can still be shared with other Mavlink peripherals like OSD or telemetry.
 
-##Developer notes
+## Developer notes
 
 Mavpixel is a regular Arduino sketch that can be opened, compiled and uploaded with the Arduino IDE version 1.0.6. Later versions will not work with the FastSerial libraries. Broad compilation options can be found near the top of Mavpixel.ino. Program constants holding Mavpixel's identity and characteristics are in IOBoard.h. Factory defaults are in IO_EEPROM.ino. Mavlink heartbeat, rate requests, reader and parameter getter/setters are all in MAVLink.ino.
 
 The Arduino IDE's Serial Monitor works well with Mavpixel. Set line endings to 'Both NL & CR' and (by default) connect at 57600 baud.
 
-##Acknowledgements
+## Acknowledgements
 
 Mavpixel would like to thank it's creators, authors and contributors. In particular:
 
