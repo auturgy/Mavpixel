@@ -3,7 +3,7 @@
 	<Release>
 		<name>Mavpixel v2.1 beta</name>
 		<version>2.1</version>  
-		<url>https://github.com/prickle/Mavpixel/releases/download/v2.1-beta/Mavpixel21beta.hex</url>
+		<url>http://github.com/prickle/Mavpixel/releases/download/v2.1-beta/Mavpixel21beta.hex</url>
 		<notes>- First full release. 
 - Complete Mavlink peripheral implementation, heartbeat and all parameters.
 - Several new commands, 'reboot', 'deadband', 'lamptest', 'sysid', 'heartbeat'.
@@ -16,7 +16,7 @@
 	<Release>
 		<name>Mavpixel v2.0 beta</name>
 		<version>2.0</version>  
-		<url>https://github.com/prickle/Mavpixel/releases/download/v2.0-beta/Mavpixel20beta.hex</url>
+		<url>http://github.com/prickle/Mavpixel/releases/download/v2.0-beta/Mavpixel20beta.hex</url>
 		<notes>- Initial beta release. 
 - Mavpixel is starting at version 2.0 as its based on jD-IOBoard version 1.5.
 - This release is expected to have some bugs. Please test thoroughly before use and beware.
