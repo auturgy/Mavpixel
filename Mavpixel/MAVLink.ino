@@ -190,6 +190,11 @@ void read_mavlink(){
               }
               //Calculate cell voltage
               if (iob_numCells > 0) iob_cellVoltage = iob_vbat_A / iob_numCells;
+              //Determine if powered from USB and limit LED brightness
+              if (usbPower != (iob_cellVoltage < 1)) {
+                usbPower = (iob_cellVoltage < 1);
+                setBrightness(readEEPROM(STRIP_BRIGHT));  
+              }
 #endif
 
             }

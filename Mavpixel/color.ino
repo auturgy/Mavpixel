@@ -150,11 +150,12 @@ void getLedHsv(uint16_t index, hsvColor_t *color)
 }
 
 void setBrightness(uint8_t v){
+  if (usbPower && v > LED_BRIGHTNESS_LIMIT) 
+    v = LED_BRIGHTNESS_LIMIT;
   strip[0]->setBrightness(v);
   strip[1]->setBrightness(v);
   strip[2]->setBrightness(v);
   strip[3]->setBrightness(v);
-  writeEEPROM(STRIP_BRIGHT, v);
 }
 
 void show() {
