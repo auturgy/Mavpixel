@@ -1,7 +1,7 @@
 Mavpixel
 ========
 
-*Under Construction..*
+## Get MavpixelGUI Windows Installer - [Download](https://github.com/prickle/MavpixelGUI/releases)
 
 Mavpixel brings Cleanflight-style LED strip functionality to the APM project.
 
@@ -143,9 +143,9 @@ It is however, possible to connect multiple Mavpixels to a single serial port us
 
 ## Developer notes
 
-Mavpixel is a regular Arduino sketch that can be opened, compiled and uploaded with the Arduino IDE version 1.0.6. Later versions will not work with the FastSerial libraries. Broad compilation options can be found near the top of Mavpixel.ino. Program constants holding Mavpixel's identity and characteristics are in IOBoard.h. Factory defaults are in IO_EEPROM.ino. Mavlink heartbeat, rate requests, reader and parameter getter/setters are all in MAVLink.ino.
+Mavpixel is a regular Arduino sketch that can be opened, compiled and uploaded with the Arduino IDE. Recent versions will now work with the FastSerial libraries. Broad compilation options can be found near the top of Mavpixel.ino. Program constants holding Mavpixel's identity and characteristics are in IOBoard.h. Factory defaults are in IO_EEPROM.ino. Mavlink heartbeat, rate requests, reader and parameter getter/setters are all in MAVLink.ino.
 
-The Arduino IDE's Serial Monitor works well with Mavpixel. Set line endings to 'Both NL & CR' and (by default) connect at 57600 baud.
+The Arduino IDE's Serial Monitor works well with Mavpixel. Set line endings to 'Both NL & CR' and (by default) connect at 57600 baud. Press <Enter> three times to switch from Mavlink to CLI mode and type "Help" for the list of commands.
 
 ## Acknowledgements
 

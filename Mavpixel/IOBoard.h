@@ -106,6 +106,9 @@ const char PROGMEM mav_color_P[] = "color_";
 #define MAV_DATA_RATE_RC_CHANNELS 5
 #define MAV_DATA_RATE_EXTRA2 5
 
+//LED Strip brightness limit when on USB power
+#define LED_BRIGHTNESS_LIMIT 16
+
 ///////////////////////////
 // Global variables
 
@@ -167,6 +170,7 @@ boolean stripAnim;
 uint8_t minSats;
 uint8_t deadBand;
 uint8_t lampTest;
+boolean usbPower = true;
 #endif
 
 //CLI processing state

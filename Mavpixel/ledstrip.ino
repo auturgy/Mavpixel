@@ -27,7 +27,7 @@
 #include <string.h>
 #include <stdarg.h>
 
-#include <platform.h>
+//#include <platform.h>
 
 #ifdef LED_STRIP
 

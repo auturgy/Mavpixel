@@ -69,6 +69,7 @@ typedef struct {
 //
 //#pragma GCC diagnostic error "-Wfloat-equal"
 
+/*
 // The following is strictly for type-checking arguments to printf_P calls
 // in conjunction with a suitably modified Arduino IDE; never define for
 // production as it generates bad code.
@@ -85,6 +86,7 @@ typedef struct {
 // has an equivalent effect but avoids the warnings, which otherwise
 // make finding real issues difficult.
 //
+
 #ifdef DESKTOP_BUILD
 # undef PROGMEM
 # define PROGMEM __attribute__(())
@@ -98,31 +100,33 @@ typedef struct {
                 (prog_char_t *)&__c[0];}))
 #endif
 
+*/
+
 // a varient of PSTR() for progmem strings passed to %S in printf()
 // this gets the gcc __format__ checking right
 #define FPSTR(s) (wchar_t *)(s)
 
-
 static inline int strcasecmp_P(const char *str1, const prog_char_t *pstr)
 {
-    return strcasecmp_P(str1, (const prog_char *)pstr);
+    return strcasecmp_P(str1, (const char *)pstr);
 }
-
+/*
 static inline int strcmp_P(const char *str1, const prog_char_t *pstr)
 {
-    return strcmp_P(str1, (const prog_char *)pstr);
+    return strcmp_P(str1, (const char *)pstr);
 }
 
 static inline size_t strlen_P(const prog_char_t *pstr)
 {
-    return strlen_P((const prog_char *)pstr);
+    return strlen_P((const char *)pstr);
 }
-
+*/
 static inline void *memcpy_P(void *dest, const prog_char_t *src, size_t n)
 {
-    return memcpy_P(dest, (const prog_char *)src, n);
+    return memcpy_P(dest, (const char *)src, n);
 }
 
+/*
 // strlcat_P() in AVR libc seems to be broken 
 static inline size_t strlcat_P(char *d, const prog_char_t *s, size_t bufsize)
 {
@@ -143,9 +147,10 @@ static inline size_t strlcat_P(char *d, const prog_char_t *s, size_t bufsize)
 	return ret;
 }
 
+*/
 static inline char *strncpy_P(char *buffer, const prog_char_t *pstr, size_t buffer_size)
 {
-    return strncpy_P(buffer, (const prog_char *)pstr, buffer_size);
+    return strncpy_P(buffer, (const char *)pstr, buffer_size);
 }
 
 
@@ -162,7 +167,7 @@ static inline uintptr_t pgm_read_pointer(const void *s)
         } u;
         uint8_t i;
         for (i=0; i< sizeof(uintptr_t); i++) {
-            u.a[i] = pgm_read_byte(i + (const prog_char *)s);
+            u.a[i] = pgm_read_byte(i + (const char *)s);
         }
         return u.p;
     }

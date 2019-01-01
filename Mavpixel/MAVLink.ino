@@ -190,6 +190,11 @@ void read_mavlink(){
               }
               //Calculate cell voltage
               if (iob_numCells > 0) iob_cellVoltage = iob_vbat_A / iob_numCells;
+              //Determine if powered from USB and limit LED brightness
+              if (usbPower != (iob_cellVoltage < 1)) {
+                usbPower = (iob_cellVoltage < 1);
+                setBrightness(readEEPROM(STRIP_BRIGHT));  
+              }
 #endif
 
             }
@@ -479,7 +484,7 @@ void mavSendParameter(int16_t index) {
 
 //Send a parameter given a name, index and value
 // if provided a non-negative nameIndex, append _<index> to name and send as uint32 rather than float
-void mavlinkSendParam(const prog_char name_P[], int nameIndex, int index, float value) {
+void mavlinkSendParam(const char name_P[], int nameIndex, int index, float value) {
      strcpy_P(mavParamBuffer, name_P);
      if (nameIndex >= 0) itoa(nameIndex, mavParamBuffer + strlen_P(name_P), 10);
      mavlink_msg_param_value_send(MAVLINK_COMM_0, mavParamBuffer,
